@@ -2,6 +2,7 @@
 /.svelte-kit
 /build
 /dist
+/npm
 .wrangler
 *.tgz
 

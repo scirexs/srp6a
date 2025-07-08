@@ -1,0 +1,32 @@
+{
+  "name": "@scirexs/srp6a",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": {
+    "./client": "./src/client/mod.ts",
+    "./server": "./src/server/mod.ts"
+  },
+  "publish": {
+    "include": [
+      "src/",
+      "README.md",
+      "LICENSE",
+      "deno.json"
+    ]
+  },
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "dev": "deno test --watch"
+  },
+  "lint": {
+    "include": ["src/", "tests/"],
+    "rules": {
+      "tags": ["recommended"],
+      "exclude": ["no-unused-vars", "no-window"]
+    }
+  },
+  "fmt": {
+    "include": ["src/", "tests/"],
+    "lineWidth": 140
+  }
+}
