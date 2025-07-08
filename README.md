@@ -91,16 +91,16 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 |g|<constant>|-|
 |U|<read from outside>|-|
 |p|<read from outside>|-|
-|I|H(U | ":" | p)|-|
-|x|H(s | I)|-|
+|I|H(U \| ":" \| p)|-|
+|x|H(s \| I)|-|
 |s|RAND()|-|
 |v|MP(g, x, N)|-|
-|k|H(N | PAD(g))|-|
+|k|H(N \| PAD(g))|-|
 |a|RAND()|-|
 |A|MP(g, a, N)|-|
 |b|RAND()|-|
 |B|k * v + MP(g, b, N)|-|
-|u|H(PAD(A) | PAD(B))|-|
+|u|H(PAD(A) \| PAD(B))|-|
 |Sc|MP(B - (k * MP(g, x, N)), a + (u * x), N)|Client side|
 |Ss|MP(MP(v, u, N) * A, b, N)|Server side|
 |Kc|H(Sc)|Client side|
@@ -118,11 +118,11 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 
 |Variable|Expression|
 |---|---|
-|N,g|<read from constant>|
-|U,p|<read from user>|
+|N,g|\<read from constant>|
+|U,p|\<read from user>|
 |s|RAND()|
-|I|H(U | ":" | p)|
-|x|H(s | I)|
+|I|H(U \| ":" \| p)|
+|x|H(s \| I)|
 |v|MP(g, x, N)|
 
 ## Login phase
@@ -131,35 +131,32 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 
 |Variable|Expression|
 |---|---|
-|N,g|<read from constant>|
-|U|<read from user>|
+|N,g|\<read from constant>|
+|U|\<read from user>|
 |a|RAND()|
 |A|MP(g, a, N)|
 
 2. Server: Send `B`,`s`.
 
-検証1: A != 0
-検証2: A % N != 0
-
 |Variable|Expression|
 |---|---|
-|U,A|<read from client>|
-|N,g,s,v|<read from password file>|
+|U,A|\<read from client>|
+|N,g,s,v|\<read from password file>|
 |b|RAND()|
-|k|H(N | PAD(g))|
+|k|H(N \| PAD(g))|
 |B|k * v + MP(g, b, N)|
 
 3. Client: Expect `Ms` and send `Mc`.
 
 |Variable|Expression|
 |---|---|
-|U,a,A|<read from state>|
-|s,B|<read from server>|
-|p|<read from user>|
-|I|H(U | ":" | p)|
-|x|H(s | I)|
-|u|H(PAD(A) | PAD(B))|
-|k|H(N | PAD(g))|
+|U,a,A|\<read from state>|
+|s,B|\<read from server>|
+|p|\<read from user>|
+|I|H(U \| ":" \| p)|
+|x|H(s \| I)|
+|u|H(PAD(A) \| PAD(B))|
+|k|H(N \| PAD(g))|
 |Sc|MP(B - (k * MP(g, x, N)), a + (u * x), N)|
 |Kc|H(Sc)|
 |Mc|H(H(N) xor H(g), H(U), s, A, B, Kc)|
@@ -169,9 +166,9 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 
 |Variable|Expression|
 |---|---|
-|N,g,U,s,v,A,b,B|<read from state>|
-|Mc|<read from client>|
-|u|H(PAD(A) | PAD(B))|
+|N,g,U,s,v,A,b,B|\<read from state>|
+|Mc|\<read from client>|
+|u|H(PAD(A) \| PAD(B))|
 |Ss|MP(MP(v, u, N) * A, b, N)|
 |Ks|H(Ss)|
 |Mc'|H(H(N) xor H(g), H(U), s, A, B, Ks)|
@@ -181,8 +178,8 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 
 |Variable|Expression|
 |---|---|
-|Ms'|<read from state>|
-|Ms|<read from server>|
+|Ms'|\<read from state>|
+|Ms|\<read from server>|
 
 # Warning
 
