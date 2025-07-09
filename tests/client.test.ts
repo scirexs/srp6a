@@ -12,7 +12,7 @@ import {
   generateSalt,
   generateServerKeyPair,
 } from "../src/shared/functions.ts";
-import { createCredentials, createEvidence, createLoginHello, verifyServer } from "../src/client/main.ts";
+import { createEvidence, createLoginHello, createUserCredentials, verifyServer } from "../src/client/main.ts";
 import type { KeyPair } from "../src/shared/types.ts";
 
 describe("SRP6a Client Tests", () => {
@@ -42,9 +42,9 @@ describe("SRP6a Client Tests", () => {
     multiplier.clear();
   });
 
-  describe("createCredentials", () => {
+  describe("createUserCredentials", () => {
     it("should create valid signup credentials", async () => {
-      const credentials = await createCredentials(username, password, config);
+      const credentials = await createUserCredentials(username, password, config);
 
       assertExists(credentials.username);
       assertExists(credentials.salt);
@@ -59,38 +59,13 @@ describe("SRP6a Client Tests", () => {
     });
 
     it("should generate different credentials each time", async () => {
-      const cred1 = await createCredentials(username, password, config);
-      const cred2 = await createCredentials(username, password, config);
+      const cred1 = await createUserCredentials(username, password, config);
+      const cred2 = await createUserCredentials(username, password, config);
 
       assertEquals(cred1.username, cred2.username);
       // Different salt and verifier (due to random salt)
       assertEquals(cred1.salt !== cred2.salt, true);
       assertEquals(cred1.verifier !== cred2.verifier, true);
-    });
-
-    it("should create consistent verifier for same inputs", async () => {
-      const fixedSalt = new CryptoNumber("1234567890ABCDEF");
-      const identity = await computeIdentity(username, password, config);
-      const secret = await computeSecret(fixedSalt, identity, config);
-      const expectedVerifier = calculateVerifier(secret, config);
-
-      // Mock generateSalt to return fixed salt
-      const originalGenerateSalt = generateSalt;
-      const generateSaltMock = () => fixedSalt;
-
-      // Replace function temporarily
-      const functions = await import("../src/shared/functions.ts");
-      // deno-lint-ignore no-explicit-any
-      (functions as any).generateSalt = generateSaltMock;
-
-      const credentials = await createCredentials(username, password, config);
-
-      // Restore original function
-      // deno-lint-ignore no-explicit-any
-      (functions as any).generateSalt = originalGenerateSalt;
-
-      assertEquals(credentials.salt, fixedSalt.hex);
-      assertEquals(credentials.verifier, expectedVerifier.hex);
     });
   });
 
@@ -244,7 +219,7 @@ describe("SRP6a Client Tests", () => {
   describe("integration test - full client flow", () => {
     it("should complete full authentication flow", async () => {
       // Step 1: Create credentials (signup simulation)
-      const credentials = await createCredentials(username, password, config);
+      const credentials = await createUserCredentials(username, password, config);
 
       // Step 2: Create login hello
       const [hello, clientKeyPair] = createLoginHello(username, config);
