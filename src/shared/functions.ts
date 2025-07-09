@@ -17,35 +17,35 @@ export {
 import type { KeyPair } from "./types.ts";
 import { computeHash, CryptoNumber, generateSecureRandom, type SRPConfig } from "./crypto.ts";
 
-// s = RAND()
+/** s = RAND() */
 function generateSalt(config: SRPConfig): CryptoNumber {
   return generateSecureRandom(config.salt);
 }
-// I = H(U | ":" | p)
+/** I = H(U | ":" | p) */
 async function computeIdentity(username: string, password: string, config: SRPConfig): Promise<CryptoNumber> {
   if (!isValidIdentitySource(username, password)) throw new Error("Username and password must have length.");
   return await computeHash(new TextEncoder().encode(`${username}:${password}`), config);
 }
-// x = H(s | I)
+/** x = H(s | I) */
 async function computeSecret(salt: CryptoNumber, identity: CryptoNumber, config: SRPConfig): Promise<CryptoNumber> {
   return await computeHash(CryptoNumber.concat(salt, identity), config);
 }
-// v = MP(g, x, N)
+/** v = MP(g, x, N) */
 function calculateVerifier(secret: CryptoNumber, config: SRPConfig): CryptoNumber {
   return CryptoNumber.modPow(config.generator, secret, config.prime);
 }
-// k = H(N | PAD(g))
+/** k = H(N | PAD(g)) */
 async function computeMultiplier(config: SRPConfig): Promise<CryptoNumber> {
   const num = config.multiplier ? new CryptoNumber(config.multiplier) : CryptoNumber.concat(config.prime, config.generator.pad());
   return await computeHash(num, config);
 }
-// b, B = k * v + MP(g, b, N)
+/** b, B = k * v + MP(g, b, N) */
 function generateServerKeyPair(multiplier: CryptoNumber, verifier: CryptoNumber, config: SRPConfig): KeyPair {
   const pair = generateKeyPair(config);
   pair.public = new CryptoNumber((multiplier.int * verifier.int + pair.public.int) % config.prime.int); // to prevent exceed prime
   return pair;
 }
-// a, A = MP(g, a, N)
+/** a, A = MP(g, a, N) */
 function generateKeyPair(config: SRPConfig): KeyPair {
   const pvt = generatePrivateKey(config);
   return {
@@ -53,7 +53,7 @@ function generateKeyPair(config: SRPConfig): KeyPair {
     public: CryptoNumber.modPow(config.generator, pvt, config.prime),
   };
 }
-// a = RAND(), b = RAND()
+/** a = RAND(), b = RAND() */
 function generatePrivateKey(config: SRPConfig): CryptoNumber {
   let result: bigint;
   do {
@@ -62,11 +62,11 @@ function generatePrivateKey(config: SRPConfig): CryptoNumber {
   } while (result === 0n);
   return new CryptoNumber(result);
 }
-// u = H(PAD(A) | PAD(B))
+/** u = H(PAD(A) | PAD(B)) */
 async function computeScramblingParameter(client: CryptoNumber, server: CryptoNumber, config: SRPConfig): Promise<CryptoNumber> {
   return await computeHash(CryptoNumber.concat(client.pad(), server.pad()), config);
 }
-// Kc = H(Sc)
+/** Kc = H(Sc) */
 async function computeClientKey(
   server: CryptoNumber,
   multiplier: CryptoNumber,
@@ -77,7 +77,7 @@ async function computeClientKey(
 ): Promise<CryptoNumber> {
   return await computeHash(calculateClientSession(server, multiplier, secret, pvt, scrambling, config), config);
 }
-// Sc = MP(B - (k * MP(g, x, N)), a + (u * x), N)
+/** Sc = MP(B - (k * MP(g, x, N)), a + (u * x), N) */
 function calculateClientSession(
   server: CryptoNumber,
   multiplier: CryptoNumber,
@@ -91,7 +91,7 @@ function calculateClientSession(
   const pow = (pvt.int + (scrambling.int * secret.int)) % config.prime.int; // to prevent exceed prime
   return CryptoNumber.modPow(base, pow, config.prime);
 }
-// Mc = H(H(N) xor H(g), H(U), s, A, B, K)
+/** Mc = H(H(N) xor H(g), H(U), s, A, B, K) */
 async function computeClientEvidence(
   username: string,
   salt: CryptoNumber,
@@ -106,7 +106,7 @@ async function computeClientEvidence(
   const usernameHash = await computeHash(new TextEncoder().encode(username), config);
   return await computeHash(CryptoNumber.concat(xor, usernameHash, salt, client, server, key), config);
 }
-// Ks = H(Ss)
+/** Ks = H(Ss) */
 async function computeServerKey(
   client: CryptoNumber,
   verifier: CryptoNumber,
@@ -116,7 +116,7 @@ async function computeServerKey(
 ): Promise<CryptoNumber> {
   return await computeHash(calculateServerSession(client, verifier, scrambling, pvt, config), config);
 }
-// Ss = MP(A * MP(v, u, N), b, N)
+/** Ss = MP(A * MP(v, u, N), b, N) */
 function calculateServerSession(
   client: CryptoNumber,
   verifier: CryptoNumber,
@@ -127,7 +127,7 @@ function calculateServerSession(
   const base = (client.int * CryptoNumber.modPow(verifier, scrambling, config.prime).int) % config.prime.int;
   return CryptoNumber.modPow(base, pvt, config.prime);
 }
-// Ms = H(A, Mc, K)
+/** Ms = H(A, Mc, K) */
 async function computeServerEvidence(
   client: CryptoNumber,
   evidence: CryptoNumber,
@@ -137,9 +137,11 @@ async function computeServerEvidence(
   return await computeHash(CryptoNumber.concat(client, evidence, key), config);
 }
 
+/** Confirm username and password is not empty. */
 function isValidIdentitySource(username: string, password: string): boolean {
   return Boolean(username) && Boolean(password);
 }
+/** Confirm public key is valid or not. */
 function isValidPublic(pub: CryptoNumber, config: SRPConfig): boolean {
   return pub.int % config.prime.int !== 0n && 1n <= pub.int && pub.int < config.prime.int;
 }

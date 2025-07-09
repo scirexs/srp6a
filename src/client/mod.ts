@@ -1,3 +1,8 @@
+/**
+ * This module exports client side functions and types.
+ * @module
+ */
+
 export {
   createEvidence,
   createLoginHello,

@@ -1,3 +1,8 @@
+/**
+ * This module exports shared constants, functions and types.
+ * @module
+ */
+
 export {
   GROUP_2048,
   GROUP_2048_FOR_SERVER,

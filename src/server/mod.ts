@@ -1,3 +1,8 @@
+/**
+ * This module exports server side functions and types.
+ * @module
+ */
+
 export { authenticate, createServerHello, extractClientHello, extractLoginEvidence } from "./main.ts";
 export {
   CryptoNumber,

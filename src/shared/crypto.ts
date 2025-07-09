@@ -103,8 +103,8 @@ function generateSecureRandom(bytes: number): CryptoNumber {
  * with lazy conversion performed as needed
  */
 class CryptoNumber {
+  /** Padding length for hex strings (no need to use) */
   static PAD_LEN = 0;
-  static ERR_CAST: Error = new Error("Can't cast from empty.");
   #int: bigint | undefined;
   #hex: string = "";
   #buf: Uint8Array | undefined;
@@ -170,36 +170,45 @@ class CryptoNumber {
     this.#buf.fill(0);
     this.#buf = undefined;
   }
+  /** Derives bigint from internal state */
   #deriveInt(): bigint {
     return this.#hex ? this.#castHex2Int() : this.#castBuf2Int();
   }
+  /** Derives hex string from internal state */
   #deriveHex(): string {
     const str = this.#buf ? this.#castBuf2Hex() : this.#castInt2Hex();
     return CryptoNumber.#guardHex(str);
   }
+  /** Derives Uint8Array from internal state */
   #deriveBuf(): Uint8Array {
     return this.#hex ? this.#castHex2Buf() : this.#castInt2Buf();
   }
+  /** Converts bigint to hex string */
   #castInt2Hex(): string {
     if (this.#int === undefined) CryptoNumber.#castError();
     return CryptoNumber.#padHexString(this.#int.toString(16));
   }
+  /** Converts bigint to Uint8Array */
   #castInt2Buf(): Uint8Array {
     if (this.#int === undefined) CryptoNumber.#castError();
     return new Uint8Array(this.hex.match(/.{2}/g)!.map((x) => parseInt(x, 16)));
   }
+  /** Converts hex string to bigint */
   #castHex2Int(): bigint {
     if (!this.#hex) CryptoNumber.#castError();
     return BigInt(`0x${this.#hex}`);
   }
+  /** Converts hex string to Uint8Array */
   #castHex2Buf(): Uint8Array {
     if (!this.#hex) CryptoNumber.#castError();
     return new Uint8Array(this.#hex.match(/.{2}/g)!.map((x) => parseInt(x, 16)));
   }
+  /** Converts Uint8Array to bigint */
   #castBuf2Int(): bigint {
     if (!this.#buf) CryptoNumber.#castError();
     return BigInt(`0x${this.hex}`);
   }
+  /** Converts Uint8Array to hex string */
   #castBuf2Hex(): string {
     if (!this.#buf) CryptoNumber.#castError();
     return Array.from(this.#buf)
@@ -207,16 +216,20 @@ class CryptoNumber {
       .join("");
   }
 
+  /** Throws a conversion error */
   static #castError(): never {
     throw new Error("Can't cast from empty.");
   }
+  /** Validates and pads hex string */
   static #guardHex(str: string): string {
     if (!CryptoNumber.#isValidHexString(str)) throw new Error("Contains invalid characters as hexadecimal.");
     return CryptoNumber.#padHexString(str);
   }
+  /** Checks if string is a valid hex string */
   static #isValidHexString(str: string): boolean {
     return /^[0-9a-fA-F]+$/.test(str);
   }
+  /** Pads hex string to even length and converts to uppercase */
   static #padHexString(str: string): string {
     str = str.toUpperCase();
     return str.length % 2 === 0 ? str : "0" + str;
