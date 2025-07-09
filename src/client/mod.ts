@@ -1,6 +1,7 @@
 export { createCredentials, createEvidence, createLoginHello, login, signup, verifyServer } from "./main.ts";
 export {
   CryptoNumber,
+  getDefaultConfig,
   GROUP_2048,
   GROUP_3072,
   GROUP_4096,

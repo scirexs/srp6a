@@ -13,7 +13,7 @@ export {
   SHA_384,
   SHA_512,
 } from "./constants.ts";
-export { CryptoNumber, SRPConfig } from "./crypto.ts";
+export { CryptoNumber, getDefaultConfig, SRPConfig } from "./crypto.ts";
 export type {
   AuthResult,
   ClientHello,

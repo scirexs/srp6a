@@ -1,6 +1,7 @@
 export { authenticate, createServerHello, extractClientHello, extractLoginEvidence } from "./main.ts";
 export {
   CryptoNumber,
+  getDefaultConfig,
   GROUP_2048_FOR_SERVER,
   GROUP_3072_FOR_SERVER,
   GROUP_4096_FOR_SERVER,
