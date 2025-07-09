@@ -1,4 +1,4 @@
-export { createCredentials, createEvidence, createLoginHello, login, signup, verifyServer };
+export { createEvidence, createLoginHello, createUserCredentials, login, signup, verifyServer };
 
 import { CryptoNumber, getDefaultConfig, SRPConfig } from "../shared/crypto.ts";
 import {
@@ -18,7 +18,7 @@ import type { AuthResult, ClientHello, KeyPair, LoginEvidence, ServerHello, Sign
 
 async function signup(url: URL, username: string, password: string, config?: SRPConfig): Promise<Response> {
   config = config ?? getDefaultConfig();
-  const credentials = await createCredentials(username, password, config);
+  const credentials = await createUserCredentials(username, password, config);
   return await postDataAsJson(url, credentials);
 }
 async function login(url: URL, username: string, password: string, config?: SRPConfig): Promise<Record<string, unknown>> {
@@ -33,7 +33,7 @@ async function login(url: URL, username: string, password: string, config?: SRPC
   return response;
 }
 
-async function createCredentials(username: string, password: string, config: SRPConfig): Promise<SignupCredentials> {
+async function createUserCredentials(username: string, password: string, config: SRPConfig): Promise<SignupCredentials> {
   const salt = generateSalt(config);
   const identity = await computeIdentity(username, password, config);
   const secret = await computeSecret(salt, identity, config);
