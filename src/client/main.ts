@@ -1,4 +1,4 @@
-export { createEvidence, createLoginHello, createUserCredentials, login, signup, verifyServer };
+export { createEvidence, createLoginHello, createUserCredentials, extractLoginResult, extractServerHello, login, signup, verifyServer };
 
 import { CryptoNumber, getDefaultConfig, SRPConfig } from "../shared/crypto.ts";
 import {
@@ -25,9 +25,9 @@ async function login(url: URL, username: string, password: string, config?: SRPC
   config = config ?? getDefaultConfig();
 
   const [hello, pair] = createLoginHello(username, config);
-  const { salt, server } = await getServerHello(await postDataAsJson(url, hello));
+  const { salt, server } = await extractServerHello(await postDataAsJson(url, hello));
   const [evidence, expected] = await createEvidence(username, password, salt, server, pair, config);
-  const response = await getLoginResult(await postDataAsJson(url, evidence));
+  const response = await extractLoginResult(await postDataAsJson(url, evidence));
   if (!response.result) throw new Error("Failed to login.");
   if (!verifyServer(expected, response.evidence)) throw new Error("Could not be verified the server.");
   return response;
@@ -80,10 +80,10 @@ function verifyServer(expected: string, evidence: string): boolean {
   return expected === evidence;
 }
 
-async function getServerHello(response: Response): Promise<ServerHello> {
+async function extractServerHello(response: Response): Promise<ServerHello> {
   return await getTypedObjectFromResponse(response, "salt", "server");
 }
-async function getLoginResult(response: Response): Promise<AuthResult> {
+async function extractLoginResult(response: Response): Promise<AuthResult> {
   return await getTypedObjectFromResponse(response, "result", "evidence");
 }
 // deno-lint-ignore no-explicit-any

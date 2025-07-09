@@ -1,4 +1,13 @@
-export { createEvidence, createLoginHello, createUserCredentials, login, signup, verifyServer } from "./main.ts";
+export {
+  createEvidence,
+  createLoginHello,
+  createUserCredentials,
+  extractLoginResult,
+  extractServerHello,
+  login,
+  signup,
+  verifyServer,
+} from "./main.ts";
 export {
   CryptoNumber,
   getDefaultConfig,
