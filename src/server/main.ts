@@ -12,7 +12,14 @@ import {
 } from "../shared/functions.ts";
 import type { AuthResult, ClientHello, KeyPair, LoginEvidence, ServerHello } from "../shared/types.ts";
 
-async function createServerHello(salt: CryptoNumber, verifier: CryptoNumber, config: SRPConfig): Promise<[ServerHello, KeyPair]> {
+async function createServerHello(
+  salt: string | CryptoNumber,
+  verifier: string | CryptoNumber,
+  config: SRPConfig,
+): Promise<[ServerHello, KeyPair]> {
+  salt = typeof salt === "string" ? new CryptoNumber(salt) : salt;
+  verifier = typeof verifier === "string" ? new CryptoNumber(verifier) : verifier;
+
   const multiplier = await computeMultiplier(config);
   const pair = generateServerKeyPair(multiplier, verifier, config);
   return [
