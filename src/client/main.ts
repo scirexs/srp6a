@@ -16,11 +16,50 @@ import {
 } from "../shared/functions.ts";
 import type { AuthResult, ClientHello, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
 
+/**
+ * Performs complete SRP6a signup flow with a server that used this library.
+ * Creates user credentials and submits them to the signup endpoint.
+ *
+ * @param url - The signup endpoint URL
+ * @param username - The desired username for the new account
+ * @param password - The desired password for the new account
+ * @param config - SRP configuration object (optional, uses default if not provided)
+ * @returns Promise that resolves to HTTP response from signup endpoint
+ *
+ * @example
+ * ```ts
+ * const response = await signup(new URL("/api/signup", window.location.origin), "newuser", "newpassword");
+ * if (response.ok) {
+ *   console.log("Signup successful");
+ * }
+ * ```
+ */
 async function signup(url: URL, username: string, password: string, config?: SRPConfig): Promise<Response> {
   config = config ?? getDefaultConfig();
   const credentials = await createUserCredentials(username, password, config);
   return await postDataAsJson(url, credentials);
 }
+/**
+ * Performs complete SRP6a login flow with a server that used this library.
+ * Handles the entire authentication process from initial hello to final verification.
+ *
+ * @param url - The login endpoint URL
+ * @param username - The username for authentication
+ * @param password - The password for authentication
+ * @param config - SRP configuration object (optional, uses default if not provided)
+ * @returns Promise that resolves to authentication result object
+ * @throws Error if login fails or server verification fails
+ *
+ * @example
+ * ```ts
+ * try {
+ *   const result = await login(new URL("/api/login", window.location.origin), "user123", "password123");
+ *   console.log("Login successful:", result);
+ * } catch (error) {
+ *   console.error("Login failed:", error.message);
+ * }
+ * ```
+ */
 async function login(url: URL, username: string, password: string, config?: SRPConfig): Promise<Record<string, unknown>> {
   config = config ?? getDefaultConfig();
 
@@ -33,6 +72,21 @@ async function login(url: URL, username: string, password: string, config?: SRPC
   return response;
 }
 
+/**
+ * Creates user credentials for SRP6a signup process.
+ * Generates salt, computes identity and secret, then calculates verifier.
+ *
+ * @param username - The username for the account
+ * @param password - The password for the account
+ * @param config - SRP configuration object
+ * @returns Promise that resolves to signup credentials containing username, salt, and verifier
+ *
+ * @example
+ * ```ts
+ * const credentials = await createUserCredentials("user123", "password123", config);
+ * console.log(credentials); // { username: "user123", salt: "...", verifier: "..." }
+ * ```
+ */
 async function createUserCredentials(username: string, password: string, config: SRPConfig): Promise<SignupCredentials> {
   const salt = generateSalt(config);
   const identity = await computeIdentity(username, password, config);
@@ -44,6 +98,20 @@ async function createUserCredentials(username: string, password: string, config:
     verifier: verifier.hex,
   };
 }
+/**
+ * Creates the initial client hello message for SRP6a login process.
+ * Generates a key pair and returns both the hello message and the key pair.
+ *
+ * @param username - The username attempting to login
+ * @param config - SRP configuration object
+ * @returns Tuple containing [ClientHello message, KeyPair for the session]
+ *
+ * @example
+ * ```ts
+ * const [hello, keyPair] = createLoginHello("user123", config);
+ * // Send hello to server, keep keyPair for evidence creation
+ * ```
+ */
 function createLoginHello(username: string, config: SRPConfig): [ClientHello, KeyPair] {
   const pair = generateKeyPair(config);
   return [
@@ -51,6 +119,31 @@ function createLoginHello(username: string, config: SRPConfig): [ClientHello, Ke
     pair,
   ];
 }
+/**
+ * Creates login evidence after receiving server hello response.
+ * Computes client evidence and expected server evidence for mutual authentication.
+ *
+ * @param username - The username attempting to login
+ * @param password - The password for authentication
+ * @param salt - Salt value from server (string or CryptoNumber)
+ * @param server - Server's public key (string or CryptoNumber)
+ * @param pair - Client's key pair from login hello
+ * @param config - SRP configuration object
+ * @returns Promise that resolves to tuple containing [LoginEvidence, expected server evidence]
+ * @throws Error if server's public key is invalid
+ *
+ * @example
+ * ```ts
+ * const [evidence, expected] = await createEvidence(
+ *   "user123",
+ *   "password123",
+ *   serverSalt,
+ *   serverPublicKey,
+ *   clientKeyPair,
+ *   config
+ * );
+ * ```
+ */
 async function createEvidence(
   username: string,
   password: string,
@@ -76,13 +169,56 @@ async function createEvidence(
     expected.hex,
   ];
 }
+/**
+ * Verifies server evidence against expected value for mutual authentication.
+ * Ensures that the server has knowledge of the shared secret by comparing evidence values.
+ *
+ * @param expected - The expected server evidence computed by client
+ * @param evidence - The actual server evidence received from server
+ * @returns True if server evidence matches expected value, false otherwise
+ *
+ * @example
+ * ```ts
+ * const isServerValid = verifyServer(expectedEvidence, serverEvidence);
+ * if (!isServerValid) {
+ *   throw new Error("Server authentication failed");
+ * }
+ * ```
+ */
 function verifyServer(expected: string, evidence: string): boolean {
   return expected === evidence;
 }
-
+/**
+ * Extracts server hello information from HTTP response, if server used this library.
+ * Parses the response and validates that it contains required salt and server properties.
+ *
+ * @param response - HTTP response from server hello endpoint
+ * @returns Promise that resolves to ServerHello object containing salt and server public key
+ * @throws Error if response is not OK, not JSON, or missing required properties
+ *
+ * @example
+ * ```ts
+ * const response = await fetch("/api/login/hello", { method: "POST", ... });
+ * const { salt, server } = await extractServerHello(response);
+ * ```
+ */
 async function extractServerHello(response: Response): Promise<ServerHello> {
   return await getTypedObjectFromResponse(response, "salt", "server");
 }
+/**
+ * Extracts login result from HTTP response after evidence submission, if server used this library.
+ * Parses the response and validates that it contains required result and evidence properties.
+ *
+ * @param response - HTTP response from login evidence endpoint
+ * @returns Promise that resolves to AuthResult object containing result status and server evidence
+ * @throws Error if response is not OK, not JSON, or missing required properties
+ *
+ * @example
+ * ```ts
+ * const response = await fetch("/api/login/evidence", { method: "POST", ... });
+ * const { result, evidence } = await extractLoginResult(response);
+ * ```
+ */
 async function extractLoginResult(response: Response): Promise<AuthResult> {
   return await getTypedObjectFromResponse(response, "result", "evidence");
 }

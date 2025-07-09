@@ -7,32 +7,69 @@ import type { HashAlgorithm, SRPHashConfig, SRPSecurityGroup } from "./types.ts"
 const crypto = globalThis?.crypto;
 if (!crypto || !crypto.subtle) throw new Error("Could not find `globalThis.crypto` with Web Crypto API.");
 
+/**
+ * Configuration class for SRP6a authentication protocol
+ * Combines security group and hash settings to provide various parameters required for authentication
+ */
 class SRPConfig {
   #group: SRPSecurityGroup;
   #hash: SRPHashConfig;
   #prime: CryptoNumber;
   #generator: CryptoNumber;
+  /**
+   * Gets the prime number from the security group
+   * @returns {CryptoNumber} Prime number value
+   */
   get prime(): CryptoNumber {
     return this.#prime;
   }
+  /**
+   * Gets the generator from the security group
+   * @returns {CryptoNumber} Generator value
+   */
   get generator(): CryptoNumber {
     return this.#generator;
   }
+  /**
+   * Gets the bit length of the security group
+   * @returns {number} Bit length
+   */
   get length(): number {
     return this.#group.length;
   }
+  /**
+   * Gets the multiplier from the security group
+   * @returns {string} Multiplier value
+   */
   get multiplier(): string {
     return this.#group.multiplier;
   }
+  /**
+   * Gets the hash algorithm
+   * @returns {HashAlgorithm} Hash algorithm
+   */
   get algorithm(): HashAlgorithm {
     return this.#hash.algorithm;
   }
+  /**
+   * Gets the number of bytes in the hash value
+   * @returns {number} Number of bytes in hash value
+   */
   get hashBytes(): number {
     return this.#hash.bytes;
   }
+  /**
+   * Gets the salt bit length
+   * @returns {number} Salt bit length
+   */
   get salt(): number {
     return this.#hash.salt;
   }
+  /**
+   * Creates an instance of SRPConfig
+   * @param {SRPSecurityGroup} group - Security group configuration
+   * @param {SRPHashConfig} hash - Hash configuration
+   */
   constructor(group: SRPSecurityGroup, hash: SRPHashConfig) {
     this.#group = group;
     this.#hash = hash;
@@ -41,6 +78,11 @@ class SRPConfig {
     this.#generator = new CryptoNumber(group.generator);
   }
 }
+/**
+ * Gets the default SRP configuration
+ * Returns default configuration using GROUP_2048 and SHA_256
+ * @returns {SRPConfig} Default SRP configuration
+ */
 function getDefaultConfig(): SRPConfig {
   return new SRPConfig(GROUP_2048, SHA_256);
 }
@@ -55,6 +97,11 @@ function generateSecureRandom(bytes: number): CryptoNumber {
   return new CryptoNumber(result);
 }
 
+/**
+ * Class representing numbers used in cryptographic operations
+ * Manages numbers in three formats: bigint, hex string, and Uint8Array,
+ * with lazy conversion performed as needed
+ */
 class CryptoNumber {
   static PAD_LEN = 0;
   static ERR_CAST: Error = new Error("Can't cast from empty.");
@@ -62,18 +109,35 @@ class CryptoNumber {
   #hex: string = "";
   #buf: Uint8Array | undefined;
 
+  /**
+   * Gets the number in bigint format (lazy evaluation)
+   * @returns {bigint} Number in bigint format
+   */
   get int(): bigint {
     if (this.#int === undefined) this.#int = this.#deriveInt();
     return this.#int;
   }
+  /**
+   * Gets the number in hex string format (lazy evaluation)
+   * @returns {string} Number in hex string format
+   */
   get hex(): string {
     if (!this.#hex) this.#hex = this.#deriveHex();
     return this.#hex;
   }
+  /**
+   * Gets the number in Uint8Array format (lazy evaluation)
+   * @returns {Uint8Array} Number in Uint8Array format
+   */
   get buf(): Uint8Array {
     if (!this.#buf) this.#buf = this.#deriveBuf();
     return this.#buf;
   }
+  /**
+   * Creates an instance of CryptoNumber
+   * @param {bigint | string | Uint8Array} value - Initial value (bigint, hex string, or Uint8Array)
+   * @throws {Error} If PAD_LEN is not initialized
+   */
   constructor(value: bigint | string | Uint8Array) {
     if (CryptoNumber.PAD_LEN <= 0) throw new Error("PAD_BYTES must be initialized before use.");
     switch (typeof value) {
@@ -89,9 +153,18 @@ class CryptoNumber {
     }
   }
 
+  /**
+   * Returns a new CryptoNumber with hex string left-padded with zeros to the specified length
+   * @param {number} [len] - Padding length (uses PAD_LEN if omitted)
+   * @returns {CryptoNumber} New CryptoNumber with padded value
+   */
   pad(len?: number): CryptoNumber {
     return new CryptoNumber(this.hex.padStart(len ?? CryptoNumber.PAD_LEN, "0"));
   }
+  /**
+   * Clears the internal Uint8Array buffer by filling it with zeros
+   * Used to securely erase sensitive data
+   */
   clear() {
     if (!this.#buf) return;
     this.#buf.fill(0);
@@ -148,6 +221,14 @@ class CryptoNumber {
     str = str.toUpperCase();
     return str.length % 2 === 0 ? str : "0" + str;
   }
+  /**
+   * Efficiently calculates modular exponentiation (base^pow mod mod)
+   * @param {CryptoNumber | bigint} base - Base value
+   * @param {CryptoNumber | bigint} pow - Exponent value
+   * @param {CryptoNumber} mod - Modulus value
+   * @returns {CryptoNumber} Result of modular exponentiation
+   * @throws {Error} If arguments are invalid
+   */
   static modPow(base: CryptoNumber | bigint, pow: CryptoNumber | bigint, mod: CryptoNumber): CryptoNumber {
     base = typeof base === "object" ? base.int : base;
     pow = typeof pow === "object" ? pow.int : pow;
@@ -164,6 +245,11 @@ class CryptoNumber {
     }
     return new CryptoNumber(result);
   }
+  /**
+   * Concatenates multiple CryptoNumber buffers
+   * @param {...CryptoNumber} nums - CryptoNumbers to concatenate
+   * @returns {CryptoNumber} Concatenated CryptoNumber
+   */
   static concat(...nums: CryptoNumber[]): CryptoNumber {
     const len = nums.reduce((sum, num) => sum + num.buf.length, 0);
     const result = new Uint8Array(len);
@@ -175,6 +261,13 @@ class CryptoNumber {
     }
     return new CryptoNumber(result);
   }
+  /**
+   * Performs XOR operation on two CryptoNumbers
+   * @param {CryptoNumber} a - First operand
+   * @param {CryptoNumber} b - Second operand
+   * @returns {CryptoNumber} XOR operation result
+   * @throws {Error} If buffer lengths differ
+   */
   static xor(a: CryptoNumber, b: CryptoNumber): CryptoNumber {
     if (a.buf.length !== b.buf.length) throw new Error("Uint8Array length must be same.");
     const aBuf = a.buf;
@@ -186,6 +279,13 @@ class CryptoNumber {
     }
     return new CryptoNumber(result);
   }
+  /**
+   * Compares two CryptoNumbers in constant time
+   * Used to prevent timing attacks
+   * @param {CryptoNumber} a - First comparison target
+   * @param {CryptoNumber} b - Second comparison target
+   * @returns {boolean} True if values are equal
+   */
   static compare(a: CryptoNumber, b: CryptoNumber): boolean { // constantTimeCompare
     const aBuf = a.buf;
     const bBuf = b.buf;
