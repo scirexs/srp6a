@@ -17,25 +17,27 @@ async function createServerHello(
   verifier: string | CryptoNumber,
   config: SRPConfig,
 ): Promise<[ServerHello, KeyPair]> {
-  salt = typeof salt === "string" ? new CryptoNumber(salt) : salt;
+  salt = typeof salt === "string" ? salt : salt.hex;
   verifier = typeof verifier === "string" ? new CryptoNumber(verifier) : verifier;
 
   const multiplier = await computeMultiplier(config);
   const pair = generateServerKeyPair(multiplier, verifier, config);
   return [
-    { salt: salt.hex, server: pair.public.hex },
+    { salt, server: pair.public.hex },
     pair,
   ];
 }
 async function authenticate(
   username: string,
-  salt: CryptoNumber,
-  verifier: CryptoNumber,
+  salt: string | CryptoNumber,
+  verifier: string | CryptoNumber,
   pair: KeyPair,
   client: string | CryptoNumber,
   evidence: string | CryptoNumber,
   config: SRPConfig,
 ): Promise<AuthResult> {
+  salt = typeof salt === "string" ? new CryptoNumber(salt) : salt;
+  verifier = typeof verifier === "string" ? new CryptoNumber(verifier) : verifier;
   client = typeof client === "string" ? new CryptoNumber(client) : client;
   evidence = typeof evidence === "string" ? new CryptoNumber(evidence) : evidence;
 
