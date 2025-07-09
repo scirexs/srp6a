@@ -1,33 +1,90 @@
-# srp6a
+# Library for SRP6a Authentication
 SRP-6a (Secure Remote Password) implementation in TypeScript for browser and server.
 
-# Overview
+# Usage
+
+## Client
+
+### Registeration Phase
+
+```ts
+import { getDefaultConfig, createUserCredentials } from "@scirexs/srp6a/client";
+
+const config = getDefaultConfig();
+const credentials = createUserCredentials(username, password, config);
+
+// send data to server like `postData(url, JSON.stringify(credentials));`
+```
+
+### Authentication Phase
+
+```ts
+import { getDefaultConfig, createLoginHello, createEvidence, verifyServer } from "@scirexs/srp6a/client";
+
+const config = getDefaultConfig();
+const [hello, pair] = createLoginHello(username, config);
+// send hello to server like `postData(url, JSON.stringify(hello));`
+
+// receive `salt` and public key from `server`
+// if server uses this library, you can use `extractServerHello(response)`
+const [evidence, expected] = await createEvidence(username, password, salt, server, pair, config);
+// send evidence to server like `postData(url, JSON.stringify(evidence));`
+
+// receive `result` and `serverEvidence` and more
+// if server uses this library, you can use `extractLoginResult(response)`
+if (!result) throw new Error("Failed to login.");
+if (!verifyServer(expected, serverEvidence)) throw new Error("Could not be verified the server.");
+```
+
+## Server
+
+### Authentication Phase
+
+```ts
+import { getDefaultConfig, createServerHello, authenticate } from "@scirexs/srp6a/server";
+
+// receive `username` and public key from `client`
+// if client uses this library, you can use `extractClientHello(request)`
+
+// read user's `salt` and `verifier` from database 
+const config = getDefaultConfig();
+const [hello, pair] = createServerHello(salt, verifier, config);
+// send hello to client like `postData(url, JSON.stringify(hello));`
+
+// receive `username` and `evidence`
+// if client uses this library, you can use `extractLoginEvidence(request)`
+const result = authenticate(username, salt, verifier, pair, client, evidence, config);
+// add other data to result
+// send result to client like `postData(url, JSON.stringify(result));`
+```
+
+# SRP Overview
 
 ## Procedure
 
 ### Signup
 
-1. Client: Calculate salt, verifier from username and password
+1. Client: Calculate salt, verifier from username and password (`createUserCredentials`)
 2. Client: Send Username, salt, verifier
 3. Server: Store them
 
 ### Login
 
-1. Client: Generate random key pair
+1. Client: Generate random key pair (`createLoginHello`)
 2. Client: Send Username, public key of the pair
 3. Server: Read stored data including salt, verifier
 4. Server: Generate random key pair
 5. Server: Send salt, public key of the pair
 6. Client: Calculate session key
-7. Client: Calculate client evidence from session key
-8. Client: Calculate expected server evidence
+7. Client: Calculate client evidence from session key (`createEvidence`)
+8. Client: Calculate expected server evidence (`createEvidence`)
 9. Client: Send the client evidence
 10. Server: Calculate session key
 11. Server: Calculate client evidence from session key
 12. Server: Confirm exactly matched evidences
 13. Server: Calculate server evidence from client evidence and session key
 14. Server: Send server evidence and result of authentication
-15. Client: Confirm exactly matched the server evidences and expected
+15. Client: Confirm exactly matched the server evidences and expected (`verifyServer`)
 
 ## Vocabulary
 ### Operator, Function
@@ -110,7 +167,7 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 |Ms|H(A, Mc, Ks)|-|
 |Ms'|H(A, Mc, Ks)|Expected Ms|
 
-# Details
+# SRP Details
 
 ## Signup phase (Client)
 
@@ -185,4 +242,4 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 
 This package has never received an independent third party audit for security and correctness.
 
-USE AT YOUR OWN RISK!
+**USE AT YOUR OWN RISK!**
