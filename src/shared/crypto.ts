@@ -142,7 +142,7 @@ class CryptoNumber {
     return CryptoNumber.#padHexString(str);
   }
   static #isValidHexString(str: string): boolean {
-    return str.length !== 0 && /^[0-9a-fA-F]+$/.test(str);
+    return /^[0-9a-fA-F]+$/.test(str);
   }
   static #padHexString(str: string): string {
     str = str.toUpperCase();
