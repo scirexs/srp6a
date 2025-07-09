@@ -2,6 +2,7 @@ export { authenticate, createServerHello, extractClientHello, extractLoginEviden
 
 import { CryptoNumber, SRPConfig } from "../shared/crypto.ts";
 import {
+  addRandomDelay,
   computeClientEvidence,
   computeMultiplier,
   computeScramblingParameter,
@@ -97,7 +98,10 @@ async function authenticate(
   const key = await computeServerKey(client, verifier, scrambling, pair.private, config);
   const authEvidence = await computeClientEvidence(username, salt, client, pair.public, key, config);
   const result = CryptoNumber.compare(authEvidence, evidence);
-  if (!result) return { result, evidence: "" };
+  if (!result) {
+    await addRandomDelay();
+    return { result, evidence: "" };
+  }
   const serverEvidence = await computeServerEvidence(client, evidence, key, config);
   return {
     result,
