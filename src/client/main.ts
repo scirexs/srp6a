@@ -62,7 +62,7 @@ async function createEvidence(
   salt = typeof salt === "string" ? new CryptoNumber(salt) : salt;
   server = typeof server === "string" ? new CryptoNumber(server) : server;
 
-  if (!isValidPublic(salt, config)) throw new Error("Random public key from server is invalid.");
+  if (!isValidPublic(server, config)) throw new Error("Random public key from server is invalid.");
   const identity = await computeIdentity(username, password, config);
   const secret = await computeSecret(salt, identity, config);
   const scrambling = await computeScramblingParameter(pair.public, server, config);
