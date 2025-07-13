@@ -70,12 +70,12 @@ async function createServerHello(
  *   config
  * );
  *
- * if (result.result) {
+ * if (result.success) {
  *   // Authentication successful, send server evidence
- *   return { result: true, evidence: result.evidence };
+ *   return { success: true, evidence: result.evidence };
  * } else {
  *   // Authentication failed
- *   return { result: false, evidence: "" };
+ *   return { success: false, evidence: "" };
  * }
  * ```
  */
@@ -97,14 +97,14 @@ async function authenticate(
   const scrambling = await computeScramblingParameter(client, pair.public, config);
   const key = await computeServerKey(client, verifier, scrambling, pair.private, config);
   const authEvidence = await computeClientEvidence(username, salt, client, pair.public, key, config);
-  const result = CryptoNumber.compare(authEvidence, evidence);
-  if (!result) {
+  const success = CryptoNumber.compare(authEvidence, evidence);
+  if (!success) {
     await addRandomDelay();
-    return { result, evidence: "" };
+    return { success, evidence: "" };
   }
   const serverEvidence = await computeServerEvidence(client, evidence, key, config);
   return {
-    result,
+    success,
     evidence: serverEvidence.hex,
   };
 }

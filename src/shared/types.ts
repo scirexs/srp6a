@@ -120,7 +120,7 @@ interface LoginEvidence {
  */
 interface AuthResult {
   /** Whether authentication was successful */
-  result: boolean;
+  success: boolean;
   /** Server evidence as hex string for mutual authentication (empty if failed) */
   evidence: string;
   /** Additional fields can be included (e.g., session info, user data) */

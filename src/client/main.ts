@@ -220,7 +220,7 @@ async function extractServerHello(response: Response): Promise<ServerHello> {
  * ```
  */
 async function extractLoginResult(response: Response): Promise<AuthResult> {
-  return await getTypedObjectFromResponse(response, "result", "evidence");
+  return await getTypedObjectFromResponse(response, "success", "evidence");
 }
 // deno-lint-ignore no-explicit-any
 async function getTypedObjectFromResponse(response: Response, ...props: string[]): Promise<any> {
