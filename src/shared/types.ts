@@ -86,6 +86,8 @@ interface ServerHello {
   salt: string;
   /** Server's public key as hex string */
   server: string;
+  /** Additional fields can be included (e.g., session info, request id) */
+  [key: string]: string | boolean;
 }
 /**
  * Login evidence from client for SRP6a authentication.
@@ -96,6 +98,8 @@ interface LoginEvidence {
   username: string;
   /** Client evidence as hex string proving password knowledge */
   evidence: string;
+  /** Additional fields can be included (e.g., session info, request id) */
+  [key: string]: string | boolean;
 }
 /**
  * Authentication result from server after evidence verification.
@@ -123,6 +127,6 @@ interface AuthResult {
   success: boolean;
   /** Server evidence as hex string for mutual authentication (empty if failed) */
   evidence: string;
-  /** Additional fields can be included (e.g., session info, user data) */
+  /** Additional fields can be included (e.g., session info, request id) */
   [key: string]: string | boolean;
 }
