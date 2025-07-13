@@ -229,9 +229,8 @@ class CryptoNumber {
   static #isValidHexString(str: string): boolean {
     return /^[0-9a-fA-F]+$/.test(str);
   }
-  /** Pads hex string to even length and converts to uppercase */
+  /** Pads hex string to even length */
   static #padHexString(str: string): string {
-    str = str.toUpperCase();
     return str.length % 2 === 0 ? str : "0" + str;
   }
   /**
