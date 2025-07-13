@@ -87,7 +87,7 @@ describe("SRP6a Server Tests", () => {
         config,
       );
 
-      assertEquals(result.result, true);
+      assertEquals(result.success, true);
       assertExists(result.evidence);
       assertEquals(result.evidence.length > 0, true);
     });
@@ -107,7 +107,7 @@ describe("SRP6a Server Tests", () => {
         config,
       );
 
-      assertEquals(result.result, false);
+      assertEquals(result.success, false);
       assertEquals(result.evidence, "");
     });
 
@@ -126,7 +126,7 @@ describe("SRP6a Server Tests", () => {
         config,
       );
 
-      assertEquals(result.result, false);
+      assertEquals(result.success, false);
       assertEquals(result.evidence, "");
     });
 
@@ -419,7 +419,7 @@ describe("SRP6a Server Tests", () => {
         config,
       );
 
-      assertEquals(authResult.result, true);
+      assertEquals(authResult.success, true);
       assertExists(authResult.evidence);
 
       // Verify server evidence can be validated by client
