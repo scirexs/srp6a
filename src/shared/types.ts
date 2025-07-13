@@ -66,6 +66,8 @@ interface SignupCredentials {
   salt: string;
   /** Password verifier as hex string, stored instead of password */
   verifier: string;
+  /** Additional fields can be included (e.g., session info, request id) */
+  [key: string]: string | boolean;
 }
 /**
  * Client hello message for SRP6a login initiation.
@@ -76,6 +78,8 @@ interface ClientHello {
   username: string;
   /** Client's public key as hex string */
   client: string;
+  /** Additional fields can be included (e.g., session info, request id) */
+  [key: string]: string | boolean;
 }
 /**
  * Server hello response for SRP6a authentication.
