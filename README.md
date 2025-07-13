@@ -1,6 +1,10 @@
 # Library for SRP6a Authentication
 SRP-6a (Secure Remote Password) implementation in TypeScript for browser and server.
 
+[![npm version](https://img.shields.io/npm/v/%40scirexs%2Fsrp6a)](https://www.npmjs.com/package/@scirexs/srp6a)
+[![JSR](https://img.shields.io/jsr/v/%40scirexs/srp6a)](https://jsr.io/@scirexs/srp6a)
+[![license](https://img.shields.io/github/license/scirexs/srp6a)](https://github.com/scirexs/srp6a/blob/main/LICENSE)
+
 # Usage
 
 ## Client
