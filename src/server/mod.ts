@@ -3,7 +3,7 @@
  * @module
  */
 
-export { authenticate, createServerHello, extractClientHello, extractLoginEvidence } from "./main.ts";
+export { authenticate, createServerHello, extractClientHello, extractLoginEvidence, extractSignupCredentials } from "./main.ts";
 export {
   CryptoNumber,
   getDefaultConfig,

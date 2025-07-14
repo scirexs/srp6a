@@ -1,4 +1,4 @@
-export { authenticate, createServerHello, extractClientHello, extractLoginEvidence };
+export { authenticate, createServerHello, extractClientHello, extractLoginEvidence, extractSignupCredentials };
 
 import { CryptoNumber, SRPConfig } from "../shared/crypto.ts";
 import {
@@ -11,7 +11,7 @@ import {
   generateServerKeyPair,
   isValidPublic,
 } from "../shared/functions.ts";
-import type { AuthResult, ClientHello, KeyPair, LoginEvidence, ServerHello } from "../shared/types.ts";
+import type { AuthResult, ClientHello, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
 
 /**
  * Creates server hello response for SRP6a authentication.
@@ -109,6 +109,24 @@ async function authenticate(
   };
 }
 
+/**
+ * Extracts client signup information from HTTP request, if client used this library.
+ * Parses the request body and validates that it contains required username and credential properties.
+ *
+ * @param request - HTTP request containing signup credential data
+ * @returns Promise that resolves to SignupCredentials object containing username and credential data
+ * @throws Error if request is not POST, not JSON, or missing required properties
+ *
+ * @example
+ * ```ts
+ * // In your HTTP handler
+ * const { username, salt, verifier } = await extractSignupCredentials(request);
+ * storeDatabase(username, salt, verifier);
+ * ```
+ */
+async function extractSignupCredentials(request: Request): Promise<SignupCredentials> {
+  return await getTypedObjectFromResponse(request, "username", "salt", "verifier");
+}
 /**
  * Extracts client hello information from HTTP request, if client used this library.
  * Parses the request body and validates that it contains required username and client properties.
