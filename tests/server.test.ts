@@ -13,7 +13,7 @@ import {
   generateKeyPair,
   generateSalt,
 } from "../src/shared/functions.ts";
-import { authenticate, createServerHello, extractClientHello, extractLoginEvidence } from "../src/server/main.ts";
+import { authenticate, createServerHello, extractClientHello, extractLoginEvidence, extractSignupCredentials } from "../src/server/main.ts";
 
 describe("SRP6a Server Tests", () => {
   let config: SRPConfig;
@@ -190,6 +190,123 @@ describe("SRP6a Server Tests", () => {
           ),
         Error,
         "Random public key from client is invalid.",
+      );
+    });
+  });
+
+  describe("extractSignupCredentials", () => {
+    it("should extract valid credentials from POST request", async () => {
+      const requestBody = {
+        username: "testuser",
+        salt: "abcdef123456",
+        verifier: "abcd7890",
+      };
+
+      const request = new Request("https://example.com/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      const credentials = await extractSignupCredentials(request);
+
+      assertEquals(credentials.username, "testuser");
+      assertEquals(credentials.salt, "abcdef123456");
+      assertEquals(credentials.verifier, "abcd7890");
+    });
+
+    it("should throw error for non-POST request", async () => {
+      const request = new Request("https://example.com/signup", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      await assertRejects(
+        async () => await extractSignupCredentials(request),
+        Error,
+        "Request must be post method.",
+      );
+    });
+
+    it("should throw error for non-JSON content type", async () => {
+      const request = new Request("https://example.com/signup", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: "not json",
+      });
+
+      await assertRejects(
+        async () => await extractSignupCredentials(request),
+        Error,
+        "Request is not json type.",
+      );
+    });
+
+    it("should throw error for non-object JSON data", async () => {
+      const request = new Request("https://example.com/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify("not an object"),
+      });
+
+      await assertRejects(
+        async () => await extractSignupCredentials(request),
+        Error,
+        "Request has invalid data.",
+      );
+    });
+
+    it("should throw error for array JSON data", async () => {
+      const request = new Request("https://example.com/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([1, 2, 3]),
+      });
+
+      await assertRejects(
+        async () => await extractSignupCredentials(request),
+        Error,
+        "Request has invalid data.",
+      );
+    });
+
+    it("should throw error for missing username property", async () => {
+      const requestBody = {
+        salt: "abcdef123456",
+        verifier: "abcd7890",
+        // username missing
+      };
+
+      const request = new Request("https://example.com/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      await assertRejects(
+        async () => await extractSignupCredentials(request),
+        Error,
+        "Required properties are not exist in request.",
+      );
+    });
+
+    it("should throw error for missing client property", async () => {
+      const requestBody = {
+        username: "testuser",
+        // salt missing
+        // verifier missing
+      };
+
+      const request = new Request("https://example.com/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      await assertRejects(
+        async () => await extractSignupCredentials(request),
+        Error,
+        "Required properties are not exist in request.",
       );
     });
   });
