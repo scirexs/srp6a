@@ -15,7 +15,7 @@ export {
   isValidPublic,
 };
 
-import type { KeyPair } from "./types.ts";
+import type { CryptoKeyPair, KeyPair } from "./types.ts";
 import { computeHash, CryptoNumber, generateSecureRandom, type SRPConfig } from "./crypto.ts";
 
 /** s = RAND() */
@@ -41,13 +41,13 @@ async function computeMultiplier(config: SRPConfig): Promise<CryptoNumber> {
   return await computeHash(num, config);
 }
 /** b, B = k * v + MP(g, b, N) */
-function generateServerKeyPair(multiplier: CryptoNumber, verifier: CryptoNumber, config: SRPConfig): KeyPair {
+function generateServerKeyPair(multiplier: CryptoNumber, verifier: CryptoNumber, config: SRPConfig): CryptoKeyPair {
   const pair = generateKeyPair(config);
   pair.public = new CryptoNumber((multiplier.int * verifier.int + pair.public.int) % config.prime.int); // to prevent exceed prime
   return pair;
 }
 /** a, A = MP(g, a, N) */
-function generateKeyPair(config: SRPConfig): KeyPair {
+function generateKeyPair(config: SRPConfig): CryptoKeyPair {
   const pvt = generatePrivateKey(config);
   return {
     private: pvt,

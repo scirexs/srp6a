@@ -14,7 +14,7 @@ import {
   generateSalt,
   isValidPublic,
 } from "../shared/functions.ts";
-import type { AuthResult, ClientHello, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
+import type { AuthResult, ClientHello, CryptoKeyPair, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
 
 /**
  * Performs complete SRP6a signup flow with a server that used this library.
@@ -116,7 +116,7 @@ function createLoginHello(username: string, config: SRPConfig): [ClientHello, Ke
   const pair = generateKeyPair(config);
   return [
     { username, client: pair.public.hex },
-    pair,
+    { private: pair.private.hex, public: pair.public.hex },
   ];
 }
 /**
@@ -149,20 +149,22 @@ async function createEvidence(
   password: string,
   salt: string | CryptoNumber,
   server: string | CryptoNumber,
-  pair: KeyPair,
+  pair: KeyPair | CryptoKeyPair,
   config: SRPConfig,
 ): Promise<[LoginEvidence, string]> {
   salt = typeof salt === "string" ? new CryptoNumber(salt) : salt;
   server = typeof server === "string" ? new CryptoNumber(server) : server;
+  const pubClient = typeof pair.public === "string" ? new CryptoNumber(pair.public) : pair.public;
+  const pvtClient = typeof pair.private === "string" ? new CryptoNumber(pair.private) : pair.private;
 
   if (!isValidPublic(server, config)) throw new Error("Random public key from server is invalid.");
   const identity = await computeIdentity(username, password, config);
   const secret = await computeSecret(salt, identity, config);
-  const scrambling = await computeScramblingParameter(pair.public, server, config);
+  const scrambling = await computeScramblingParameter(pubClient, server, config);
   const multiplier = await computeMultiplier(config);
-  const key = await computeClientKey(server, multiplier, secret, pair.private, scrambling, config);
-  const evidence = await computeClientEvidence(username, salt, pair.public, server, key, config);
-  const expected = await computeServerEvidence(pair.public, evidence, key, config);
+  const key = await computeClientKey(server, multiplier, secret, pvtClient, scrambling, config);
+  const evidence = await computeClientEvidence(username, salt, pubClient, server, key, config);
+  const expected = await computeServerEvidence(pubClient, evidence, key, config);
 
   return [
     { username, evidence: evidence.hex },

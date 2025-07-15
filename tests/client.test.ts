@@ -13,13 +13,13 @@ import {
   generateServerKeyPair,
 } from "../src/shared/functions.ts";
 import { createEvidence, createLoginHello, createUserCredentials, verifyServer } from "../src/client/main.ts";
-import type { KeyPair } from "../src/shared/types.ts";
+import type { CryptoKeyPair, KeyPair } from "../src/shared/types.ts";
 
 describe("SRP6a Client Tests", () => {
   let config: SRPConfig;
   let salt: CryptoNumber;
   let verifier: CryptoNumber;
-  let serverKeyPair: KeyPair;
+  let serverKeyPair: CryptoKeyPair;
   let multiplier: CryptoNumber;
   const username = "testuser";
   const password = "testpassword";
@@ -77,15 +77,17 @@ describe("SRP6a Client Tests", () => {
       assertExists(hello.client);
       assertEquals(hello.username, username);
 
-      // Verify client public key is valid
       const clientPublic = new CryptoNumber(hello.client);
+      const keyPublic = new CryptoNumber(keyPair.public);
+      const keyPrivate = new CryptoNumber(keyPair.private);
+      // Verify client public key is valid
       assertEquals(clientPublic.int > 0n, true);
       assertEquals(clientPublic.int < config.prime.int, true);
-      assertEquals(hello.client, keyPair.public.hex);
+      assertEquals(hello.client, keyPublic.hex);
 
       // Verify key pair is valid
-      assertEquals(keyPair.private.int > 0n, true);
-      assertEquals(keyPair.public.int > 0n, true);
+      assertEquals(keyPrivate.int > 0n, true);
+      assertEquals(keyPublic.int > 0n, true);
     });
 
     it("should generate different hello each time", () => {
@@ -95,7 +97,7 @@ describe("SRP6a Client Tests", () => {
       assertEquals(hello1.username, hello2.username);
       // Different client public keys (due to random private key)
       assertEquals(hello1.client !== hello2.client, true);
-      assertEquals(keyPair1.public.hex !== keyPair2.public.hex, true);
+      assertEquals(keyPair1.public !== keyPair2.public, true);
     });
   });
 
@@ -222,7 +224,8 @@ describe("SRP6a Client Tests", () => {
       const credentials = await createUserCredentials(username, password, config);
 
       // Step 2: Create login hello
-      const [hello, clientKeyPair] = createLoginHello(username, config);
+      const [hello, keyPair] = createLoginHello(username, config);
+      const clientKeyPair = { private: new CryptoNumber(keyPair.private), public: new CryptoNumber(keyPair.public) };
 
       // Step 3: Server creates hello (simulation)
       const serverSalt = new CryptoNumber(credentials.salt);

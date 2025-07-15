@@ -42,7 +42,7 @@ describe("SRP6a Server Tests", () => {
       assertExists(serverHello.salt);
       assertExists(serverHello.server);
       assertEquals(serverHello.salt, salt.hex);
-      assertEquals(serverHello.server, keyPair.public.hex);
+      assertEquals(serverHello.server, keyPair.public);
 
       // Verify server public key is valid
       const serverPublic = new CryptoNumber(serverHello.server);

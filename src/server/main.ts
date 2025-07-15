@@ -11,7 +11,7 @@ import {
   generateServerKeyPair,
   isValidPublic,
 } from "../shared/functions.ts";
-import type { AuthResult, ClientHello, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
+import type { AuthResult, ClientHello, CryptoKeyPair, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
 
 /**
  * Creates server hello response for SRP6a authentication.
@@ -41,7 +41,7 @@ async function createServerHello(
   const pair = generateServerKeyPair(multiplier, verifier, config);
   return [
     { salt, server: pair.public.hex },
-    pair,
+    { private: pair.private.hex, public: pair.public.hex },
   ];
 }
 /**
@@ -83,7 +83,7 @@ async function authenticate(
   username: string,
   salt: string | CryptoNumber,
   verifier: string | CryptoNumber,
-  pair: KeyPair,
+  pair: KeyPair | CryptoKeyPair,
   client: string | CryptoNumber,
   evidence: string | CryptoNumber,
   config: SRPConfig,
@@ -92,11 +92,13 @@ async function authenticate(
   verifier = typeof verifier === "string" ? new CryptoNumber(verifier) : verifier;
   client = typeof client === "string" ? new CryptoNumber(client) : client;
   evidence = typeof evidence === "string" ? new CryptoNumber(evidence) : evidence;
+  const pubServer = typeof pair.public === "string" ? new CryptoNumber(pair.public) : pair.public;
+  const pvtServer = typeof pair.private === "string" ? new CryptoNumber(pair.private) : pair.private;
 
   if (!isValidPublic(client, config)) throw new Error("Random public key from client is invalid.");
-  const scrambling = await computeScramblingParameter(client, pair.public, config);
-  const key = await computeServerKey(client, verifier, scrambling, pair.private, config);
-  const authEvidence = await computeClientEvidence(username, salt, client, pair.public, key, config);
+  const scrambling = await computeScramblingParameter(client, pubServer, config);
+  const key = await computeServerKey(client, verifier, scrambling, pvtServer, config);
+  const authEvidence = await computeClientEvidence(username, salt, client, pubServer, key, config);
   const success = CryptoNumber.compare(authEvidence, evidence);
   if (!success) {
     await addRandomDelay();

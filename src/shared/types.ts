@@ -1,6 +1,7 @@
 export type {
   AuthResult,
   ClientHello,
+  CryptoKeyPair,
   HashAlgorithm,
   KeyPair,
   LoginEvidence,
@@ -49,11 +50,21 @@ type SRPHashConfig = {
  * Public-private key pair for SRP6a authentication.
  * Contains both the random private key and random public key used in the SRP protocol.
  */
-type KeyPair = {
+type CryptoKeyPair = {
   /** Random private key used for authentication */
   private: CryptoNumber;
   /** Random public key shared during authentication handshake */
   public: CryptoNumber;
+};
+/**
+ * Public-private hex key pair for SRP6a authentication.
+ * Contains both the random private key and random public key used in the SRP protocol.
+ */
+type KeyPair = {
+  /** Random private hex key used for authentication */
+  private: string;
+  /** Random public hex key shared during authentication handshake */
+  public: string;
 };
 /**
  * User credentials for SRP6a signup process.
