@@ -148,6 +148,8 @@ function isValidPublic(pub: CryptoNumber, config: SRPConfig): boolean {
 }
 /** Add random delay to fail authentication. */
 async function addRandomDelay(ms: number = 5): Promise<void> {
+  ms = Math.ceil(Math.abs(ms));
+  ms = ms <= 1 ? 5 : ms;
   const delay = (Math.random() * (ms - 1)) + 1;
   await new Promise((resolve) => setTimeout(resolve, delay));
 }
