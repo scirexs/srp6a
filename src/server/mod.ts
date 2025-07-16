@@ -3,7 +3,14 @@
  * @module
  */
 
-export { authenticate, createServerHello, extractClientHello, extractLoginEvidence, extractSignupCredentials } from "./main.ts";
+export {
+  addRandomDelay,
+  authenticate,
+  createServerHello,
+  extractClientHello,
+  extractLoginEvidence,
+  extractSignupCredentials,
+} from "./main.ts";
 export {
   CryptoNumber,
   getDefaultConfig,

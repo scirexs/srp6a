@@ -1,4 +1,4 @@
-export { authenticate, createServerHello, extractClientHello, extractLoginEvidence, extractSignupCredentials };
+export { addRandomDelay, authenticate, createServerHello, extractClientHello, extractLoginEvidence, extractSignupCredentials };
 
 import { CryptoNumber, SRPConfig } from "../shared/crypto.ts";
 import {
