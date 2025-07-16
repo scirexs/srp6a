@@ -48,14 +48,14 @@ function generateServerKeyPair(multiplier: CryptoNumber, verifier: CryptoNumber,
 }
 /** a, A = MP(g, a, N) */
 function generateKeyPair(config: SRPConfig): CryptoKeyPair {
-  const pvt = generatePrivateKey(config);
+  const pvt = generateRandomKey(config);
   return {
     private: pvt,
     public: CryptoNumber.modPow(config.generator, pvt, config.prime),
   };
 }
 /** a = RAND(), b = RAND() */
-function generatePrivateKey(config: SRPConfig): CryptoNumber {
+function generateRandomKey(config: SRPConfig): CryptoNumber {
   let result: bigint;
   do {
     const array = generateSecureRandom(config.hashBytes);
