@@ -1,4 +1,12 @@
-export { addRandomDelay, authenticate, createServerHello, extractClientHello, extractLoginEvidence, extractSignupCredentials };
+export {
+  addRandomDelay,
+  authenticate,
+  createDummyHello,
+  createServerHello,
+  extractClientHello,
+  extractLoginEvidence,
+  extractSignupCredentials,
+};
 
 import { CryptoNumber, SRPConfig } from "../shared/crypto.ts";
 import {
@@ -8,6 +16,8 @@ import {
   computeScramblingParameter,
   computeServerEvidence,
   computeServerKey,
+  generateRandomKey,
+  generateSalt,
   generateServerKeyPair,
   isValidPublic,
 } from "../shared/functions.ts";
@@ -43,6 +53,29 @@ async function createServerHello(
     { salt, server: pair.public.hex },
     { private: pair.private.hex, public: pair.public.hex },
   ];
+}
+/**
+ * Creates a dummy server hello response.
+ * Generates a dummy salt and server key to prevent user enumeration attacks.
+ *
+ * @param config - SRP configuration object
+ * @returns Dummy ServerHello message
+ *
+ * @example
+ * ```ts
+ * const userRecord = getUserFromDatabase(username);
+ * if (!userRecord) {
+ *   const dummy = await createDummyHello(config);
+ *   addRandomDelay();
+ *   // Send dummy response to client
+ * }
+ * ```
+ */
+function createDummyHello(config: SRPConfig): ServerHello {
+  return {
+    salt: generateSalt(config).hex,
+    server: generateRandomKey(config).hex,
+  };
 }
 /**
  * Authenticates client evidence and generates server evidence for mutual authentication.

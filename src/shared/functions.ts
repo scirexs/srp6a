@@ -10,12 +10,13 @@ export {
   computeServerEvidence,
   computeServerKey,
   generateKeyPair,
+  generateRandomKey,
   generateSalt,
   generateServerKeyPair,
   isValidPublic,
 };
 
-import type { CryptoKeyPair, KeyPair } from "./types.ts";
+import type { CryptoKeyPair } from "./types.ts";
 import { computeHash, CryptoNumber, generateSecureRandom, type SRPConfig } from "./crypto.ts";
 
 /** s = RAND() */

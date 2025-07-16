@@ -6,6 +6,7 @@
 export {
   addRandomDelay,
   authenticate,
+  createDummyHello,
   createServerHello,
   extractClientHello,
   extractLoginEvidence,
