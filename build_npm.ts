@@ -20,7 +20,7 @@ await build({
   declaration: "separate",
   test: false,
   shims: {
-    deno: true,
+    deno: false,
   },
   compilerOptions: {
     lib: ["ES2023"],
