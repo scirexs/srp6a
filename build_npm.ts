@@ -3,10 +3,10 @@ import packageInfo from "./deno.json" with { type: "json" };
 
 await emptyDir("./npm");
 
-const file = "./src/shared/functions.ts";
-let ts = await Deno.readTextFile(file);
-ts = ts.split("\n").slice(0, -7).join("\n");
-await Deno.writeTextFile(file, ts);
+// const file = "./src/shared/functions.ts";
+// let ts = await Deno.readTextFile(file);
+// ts = ts.split("\n").slice(0, -7).join("\n");
+// await Deno.writeTextFile(file, ts);
 
 await build({
   entryPoints: [
