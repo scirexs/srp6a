@@ -109,8 +109,6 @@ interface ServerHello {
  * Contains username and client's computed evidence to prove password knowledge.
  */
 interface LoginEvidence {
-  /** Username attempting to authenticate */
-  username: string;
   /** Client evidence as hex string proving password knowledge */
   evidence: string;
   /** Additional fields can be included (e.g., session info, request id) */

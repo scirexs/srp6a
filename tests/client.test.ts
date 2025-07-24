@@ -113,10 +113,8 @@ describe("SRP6a Client Tests", () => {
         config,
       );
 
-      assertExists(evidence.username);
       assertExists(evidence.evidence);
       assertExists(expected);
-      assertEquals(evidence.username, username);
 
       // Verify evidence is valid hex string
       const evidenceNum = new CryptoNumber(evidence.evidence);
@@ -138,10 +136,8 @@ describe("SRP6a Client Tests", () => {
         config,
       );
 
-      assertExists(evidence.username);
       assertExists(evidence.evidence);
       assertExists(expected);
-      assertEquals(evidence.username, username);
 
       // Verify evidence is valid hex string
       const evidenceNum = new CryptoNumber(evidence.evidence);

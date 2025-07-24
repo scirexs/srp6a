@@ -167,7 +167,7 @@ async function createEvidence(
   const expected = await computeServerEvidence(pubClient, evidence, key, config);
 
   return [
-    { username, evidence: evidence.hex },
+    { evidence: evidence.hex },
     expected.hex,
   ];
 }
