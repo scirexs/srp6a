@@ -1,6 +1,6 @@
-export { createEvidence, createLoginHello, createUserCredentials, extractLoginResult, extractServerHello, login, signup, verifyServer };
+export { createEvidence, createLoginHello, createUserCredentials, extractLoginResult, extractServerHello, verifyServer };
 
-import { CryptoNumber, getDefaultConfig, SRPConfig } from "../shared/crypto.ts";
+import { CryptoNumber, type SRPConfig } from "../shared/crypto.ts";
 import {
   calculateVerifier,
   computeClientEvidence,
@@ -15,62 +15,6 @@ import {
   isValidPublic,
 } from "../shared/functions.ts";
 import type { AuthResult, ClientHello, CryptoKeyPair, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
-
-/**
- * Performs complete SRP6a signup flow with a server that used this library.
- * Creates user credentials and submits them to the signup endpoint.
- *
- * @param url - The signup endpoint URL
- * @param username - The desired username for the new account
- * @param password - The desired password for the new account
- * @param config - SRP configuration object (optional, uses default if not provided)
- * @returns Promise that resolves to HTTP response from signup endpoint
- *
- * @example
- * ```ts
- * const response = await signup(new URL("/api/signup", window.location.origin), "newuser", "newpassword");
- * if (response.ok) {
- *   console.log("Signup successful");
- * }
- * ```
- */
-async function signup(url: URL, username: string, password: string, config?: SRPConfig): Promise<Response> {
-  config = config ?? getDefaultConfig();
-  const credentials = await createUserCredentials(username, password, config);
-  return await postDataAsJson(url, credentials);
-}
-/**
- * Performs complete SRP6a login flow with a server that used this library.
- * Handles the entire authentication process from initial hello to final verification.
- *
- * @param url - The login endpoint URL
- * @param username - The username for authentication
- * @param password - The password for authentication
- * @param config - SRP configuration object (optional, uses default if not provided)
- * @returns Promise that resolves to authentication result object
- * @throws Error if login fails or server verification fails
- *
- * @example
- * ```ts
- * try {
- *   const result = await login(new URL("/api/login", window.location.origin), "user123", "password123");
- *   console.log("Login successful:", result);
- * } catch (error) {
- *   console.error("Login failed:", error.message);
- * }
- * ```
- */
-async function login(url: URL, username: string, password: string, config?: SRPConfig): Promise<Record<string, unknown>> {
-  config = config ?? getDefaultConfig();
-
-  const [hello, pair] = createLoginHello(username, config);
-  const { salt, server } = await extractServerHello(await postDataAsJson(url, hello));
-  const [evidence, expected] = await createEvidence(username, password, salt, server, pair, config);
-  const response = await extractLoginResult(await postDataAsJson(url, evidence));
-  if (!response.result) throw new Error("Failed to login.");
-  if (!verifyServer(expected, response.evidence)) throw new Error("Could not be verified the server.");
-  return response;
-}
 
 /**
  * Creates user credentials for SRP6a signup process.
@@ -237,17 +181,4 @@ function checkRequiredProperties(obj: Record<string, string>, ...props: string[]
   for (const prop of props) {
     if (!Object.hasOwn(obj, prop)) throw new Error("Required properties are not exist in response.");
   }
-}
-
-async function postDataAsJson<T>(url: URL, data: T): Promise<Response> {
-  return await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-    credentials: "same-origin",
-    cache: "no-cache",
-    redirect: "error",
-  });
 }

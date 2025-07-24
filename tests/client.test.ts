@@ -13,7 +13,7 @@ import {
   generateServerKeyPair,
 } from "../src/shared/functions.ts";
 import { createEvidence, createLoginHello, createUserCredentials, verifyServer } from "../src/client/main.ts";
-import type { CryptoKeyPair, KeyPair } from "../src/shared/types.ts";
+import type { CryptoKeyPair } from "../src/shared/types.ts";
 
 describe("SRP6a Client Tests", () => {
   let config: SRPConfig;
