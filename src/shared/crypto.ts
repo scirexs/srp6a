@@ -89,7 +89,7 @@ function getDefaultConfig(): SRPConfig {
 
 async function computeHash(num: CryptoNumber | Uint8Array, config: SRPConfig): Promise<CryptoNumber> {
   num = num instanceof CryptoNumber ? num.buf : num;
-  return new CryptoNumber(new Uint8Array(await crypto.subtle.digest(config.algorithm, num)));
+  return new CryptoNumber(new Uint8Array(await crypto.subtle.digest(config.algorithm, num as Uint8Array<ArrayBuffer>)));
 }
 function generateSecureRandom(bytes: number): CryptoNumber {
   const result = new Uint8Array(bytes);
