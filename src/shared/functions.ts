@@ -147,11 +147,9 @@ function isValidIdentitySource(username: string, password: string): boolean {
 function isValidPublic(pub: CryptoNumber, config: SRPConfig): boolean {
   return pub.int % config.prime.int !== 0n && 1n <= pub.int && pub.int < config.prime.int;
 }
-/** Add random delay to fail authentication. */
+/** Add random delay for server response to mitigate timing attacks. */
 async function addRandomDelay(ms: number = 5): Promise<void> {
-  ms = Math.ceil(Math.abs(ms));
-  ms = ms <= 1 ? 5 : ms;
-  const delay = (Math.random() * (ms - 1)) + 1;
+  const delay = Math.ceil(Math.random() * Math.max(1, ms));
   await new Promise((resolve) => setTimeout(resolve, delay));
 }
 
