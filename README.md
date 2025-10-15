@@ -1,13 +1,26 @@
-# Library for SRP6a Authentication
+# Package for SRP-6a Authentication
 SRP-6a (Secure Remote Password) implementation in TypeScript for browser and server.
 
 [![npm version](https://img.shields.io/npm/v/%40scirexs%2Fsrp6a)](https://www.npmjs.com/package/@scirexs/srp6a)
 [![JSR](https://img.shields.io/jsr/v/%40scirexs/srp6a)](https://jsr.io/@scirexs/srp6a)
 [![license](https://img.shields.io/github/license/scirexs/srp6a)](https://github.com/scirexs/srp6a/blob/main/LICENSE)
 
+
+# Installation
+```bash
+# npm
+npm install @scirexs/srp6a
+
+# JSR (Deno)
+deno add @scirexs/srp6a
+```
+
+
 # Usage
 
-## Client
+## For Client
+
+For details, see [the client documentation](https://jsr.io/@scirexs/srp6a/doc/client).
 
 ### Registration Phase
 
@@ -17,7 +30,7 @@ import { getDefaultConfig, createUserCredentials } from "@scirexs/srp6a/client";
 const config = getDefaultConfig();
 const credentials = createUserCredentials(username, password, config);
 
-// send data to server like `postData(url, JSON.stringify(credentials));`
+// send data to server like `myPostDataFn(url, JSON.stringify(credentials));`
 ```
 
 ### Authentication Phase
@@ -27,42 +40,44 @@ import { getDefaultConfig, createLoginHello, createEvidence, verifyServer } from
 
 const config = getDefaultConfig();
 const [hello, pair] = createLoginHello(username, config);
-// send hello to server like `postData(url, JSON.stringify(hello));`
+// send hello to server like `myPostDataFn(url, JSON.stringify(hello));`
 
-// receive `salt` and public key from `server`
-// if server uses this library, you can use `extractServerHello(response)`
+// receive `salt` and public key from the server
+// if the server uses this package, you can use `extractServerHello(response)`
 const [evidence, expected] = await createEvidence(username, password, salt, server, pair, config);
-// send evidence to server like `postData(url, JSON.stringify(evidence));`
+// send evidence to server like `myPostDataFn(url, JSON.stringify(evidence));`
 
 // receive `result` and `serverEvidence` and more
-// if server uses this library, you can use `extractLoginResult(response)`
+// if the server uses this package, you can use `extractLoginResult(response)`
 if (!result) throw new Error("Failed to login.");
-if (!verifyServer(expected, serverEvidence)) throw new Error("Could not be verified the server.");
+if (!verifyServer(expected, serverEvidence)) throw new Error("Could not verify the server.");
 ```
 
-## Server
+## For Server
+
+For details, see [the server documentation](https://jsr.io/@scirexs/srp6a/doc/server).
 
 ### Authentication Phase
 
 ```ts
 import { getDefaultConfig, createServerHello, authenticate } from "@scirexs/srp6a/server";
 
-// receive `username` and public key from `client`
-// if client uses this library, you can use `extractClientHello(request)`
+// receive `username` and public key from the client
+// if the client uses this package, you can use `extractClientHello(request)`
 
-// read user's `salt` and `verifier` from database 
+// read user's `salt` and `verifier` from the database
+// if the user does not exist, use `createDummyHello` instead of `createServerHello`
 const config = getDefaultConfig();
 const [hello, pair] = createServerHello(salt, verifier, config);
-// send hello to client like `postData(url, JSON.stringify(hello));`
+// it is recommended to always use `addRandomDelay` before sending hello to mitigate timing attacks
+// send hello to client like `myPostDataFn(url, JSON.stringify(hello));`
 
-// receive `username` and `evidence`
-// if client uses this library, you can use `extractLoginEvidence(request)`
+// receive `username` and `evidence` from the client
+// if the client uses this package, you can use `extractLoginEvidence(request)`
 const result = authenticate(username, salt, verifier, pair, client, evidence, config);
-// add other data to result
-// send result to client like `postData(url, JSON.stringify(result));`
+// add other data to the result object
+// send result to client like `myPostDataFn(url, JSON.stringify(result));`
 ```
-
-In production use, it is recommended to utilize `addRandomDelay` to mitigate timing attacks and `createDummyHello` to prevent username enumeration attacks.
 
 ## Encryption Configuration
 
@@ -74,14 +89,9 @@ const config = new SRPConfig(GROUP_4096, SHA_512);
 // const config = new SRPConfig(GROUP_4096_FOR_SERVER, SHA_512);
 ```
 
-`getDefaultConfig()` returns `new SRPConfig(GROUP_2048, SHA_256)`.  
-The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they include the `multiplier` value, which can be derived through calculation. `GROUP_4096` does not include the `multiplier` value to reduce package size.
+`getDefaultConfig()` returns `new SRPConfig(GROUP_2048, SHA_256)`.
 
-
-# References
-
-For `@scirexs/srp6a/client`, see [here](https://jsr.io/@scirexs/srp6a/doc/client).  
-For `@scirexs/srp6a/server`, see [here](https://jsr.io/@scirexs/srp6a/doc/server).
+The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they include a precomputed `multiplier` value. `GROUP_4096` does not include the precomputed `multiplier` to reduce package size, as it can be derived through calculation when needed.
 
 
 # SRP Overview
@@ -264,8 +274,9 @@ For `@scirexs/srp6a/server`, see [here](https://jsr.io/@scirexs/srp6a/doc/server
 |Ms'|\<read from state>|
 |Ms|\<read from server>|
 
+
 # Warning
 
-This package has never received an independent third-party audit for security and correctness.
+This package includes security countermeasures such as constant-time comparisons and random delay insertion. However, it has never received an independent third-party security audit for correctness and security.
 
 **Do not use this package in production environments without understanding the security risks involved. USE AT YOUR OWN RISK!**
