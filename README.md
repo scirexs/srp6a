@@ -9,7 +9,7 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 
 ## Client
 
-### Registeration Phase
+### Registration Phase
 
 ```ts
 import { getDefaultConfig, createUserCredentials } from "@scirexs/srp6a/client";
@@ -62,6 +62,28 @@ const result = authenticate(username, salt, verifier, pair, client, evidence, co
 // send result to client like `postData(url, JSON.stringify(result));`
 ```
 
+In production use, it is recommended to utilize `addRandomDelay` to mitigate timing attacks and `createDummyHello` to prevent username enumeration attacks.
+
+## Encryption Configuration
+
+```ts
+import { SRPConfig, SHA_512, GROUP_4096 } from "@scirexs/srp6a/client";
+// import { SRPConfig, SHA_512, GROUP_4096_FOR_SERVER } from "@scirexs/srp6a/server";
+
+const config = new SRPConfig(GROUP_4096, SHA_512);
+// const config = new SRPConfig(GROUP_4096_FOR_SERVER, SHA_512);
+```
+
+`getDefaultConfig()` returns `new SRPConfig(GROUP_2048, SHA_256)`.  
+The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they include the `multiplier` value, which can be derived through calculation. `GROUP_4096` does not include the `multiplier` value to reduce package size.
+
+
+# References
+
+For `@scirexs/srp6a/client`, see [here](https://jsr.io/@scirexs/srp6a/doc/client).  
+For `@scirexs/srp6a/server`, see [here](https://jsr.io/@scirexs/srp6a/doc/server).
+
+
 # SRP Overview
 
 ## Procedure
@@ -77,13 +99,13 @@ const result = authenticate(username, salt, verifier, pair, client, evidence, co
 1. Client: Generate random key pair (`createLoginHello`)
 2. Client: Send Username, public key of the pair
 3. Server: Read stored data including salt, verifier
-4. Server: Generate random key pair
+4. Server: Generate random key pair (`createServerHello`)
 5. Server: Send salt, public key of the pair
-6. Client: Calculate session key
-7. Client: Calculate client evidence from session key (`createEvidence`)
-8. Client: Calculate expected server evidence (`createEvidence`)
+6. Client: Calculate session key (`createEvidence` includes step 6-8)
+7. Client: Calculate client evidence from session key
+8. Client: Calculate expected server evidence
 9. Client: Send the client evidence
-10. Server: Calculate session key
+10. Server: Calculate session key (`authenticate` includes step 10-13)
 11. Server: Calculate client evidence from session key
 12. Server: Confirm exactly matched evidences
 13. Server: Calculate server evidence from client evidence and session key
@@ -244,6 +266,6 @@ const result = authenticate(username, salt, verifier, pair, client, evidence, co
 
 # Warning
 
-This package has never received an independent third party audit for security and correctness.
+This package has never received an independent third-party audit for security and correctness.
 
-**USE AT YOUR OWN RISK!**
+**Do not use this package in production environments without understanding the security risks involved. USE AT YOUR OWN RISK!**

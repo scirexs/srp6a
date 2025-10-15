@@ -122,7 +122,7 @@ interface LoginEvidence {
  * ```ts
  * // Successful authentication
  * const authResult: AuthResult = {
- *   result: true,
+ *   success: true,
  *   evidence: "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p",
  *   sessionId: "session_123",  // Additional fields allowed
  *   userId: "user_456"
@@ -130,7 +130,7 @@ interface LoginEvidence {
  *
  * // Failed authentication
  * const failedResult: AuthResult = {
- *   result: false,
+ *   success: false,
  *   evidence: ""  // Empty evidence on failure
  * };
  * ```
