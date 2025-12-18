@@ -6,23 +6,23 @@ SRP-6a (Secure Remote Password) implementation in TypeScript for browser and ser
 [![license](https://img.shields.io/github/license/scirexs/srp6a)](https://github.com/scirexs/srp6a/blob/main/LICENSE)
 
 
-# Installation
+## Installation
 ```bash
 # npm
 npm install @scirexs/srp6a
 
 # JSR (Deno)
-deno add @scirexs/srp6a
+deno add jsr:@scirexs/srp6a
 ```
 
 
-# Usage
+## Usage
 
-## For Client
+### For Client
 
 For details, see [the client documentation](https://jsr.io/@scirexs/srp6a/doc/client).
 
-### Registration Phase
+#### Registration Phase
 
 ```ts
 import { getDefaultConfig, createUserCredentials } from "@scirexs/srp6a/client";
@@ -30,22 +30,22 @@ import { getDefaultConfig, createUserCredentials } from "@scirexs/srp6a/client";
 const config = getDefaultConfig();
 const credentials = createUserCredentials(username, password, config);
 
-// send data to server like `myPostDataFn(url, JSON.stringify(credentials));`
+// send data to server like `fetch(url, { method: "POST", body: JSON.stringify(credentials)});`
 ```
 
-### Authentication Phase
+#### Authentication Phase
 
 ```ts
 import { getDefaultConfig, createLoginHello, createEvidence, verifyServer } from "@scirexs/srp6a/client";
 
 const config = getDefaultConfig();
 const [hello, pair] = createLoginHello(username, config);
-// send hello to server like `myPostDataFn(url, JSON.stringify(hello));`
+// send hello to server like `fetch(url, { method: "POST", body: JSON.stringify(hello)});`
 
 // receive `salt` and public key from the server
 // if the server uses this package, you can use `extractServerHello(response)`
 const [evidence, expected] = await createEvidence(username, password, salt, server, pair, config);
-// send evidence to server like `myPostDataFn(url, JSON.stringify(evidence));`
+// send evidence to server like `fetch(url, { method: "POST", body: JSON.stringify(evidence)});`
 
 // receive `result` and `serverEvidence` and more
 // if the server uses this package, you can use `extractLoginResult(response)`
@@ -53,11 +53,11 @@ if (!result) throw new Error("Failed to login.");
 if (!verifyServer(expected, serverEvidence)) throw new Error("Could not verify the server.");
 ```
 
-## For Server
+### For Server
 
 For details, see [the server documentation](https://jsr.io/@scirexs/srp6a/doc/server).
 
-### Authentication Phase
+#### Authentication Phase
 
 ```ts
 import { getDefaultConfig, createServerHello, authenticate } from "@scirexs/srp6a/server";
@@ -70,16 +70,20 @@ import { getDefaultConfig, createServerHello, authenticate } from "@scirexs/srp6
 const config = getDefaultConfig();
 const [hello, pair] = createServerHello(salt, verifier, config);
 // it is recommended to always use `addRandomDelay` before sending hello to mitigate timing attacks
-// send hello to client like `myPostDataFn(url, JSON.stringify(hello));`
+// response hello to client like `new Response(JSON.stringify(hello));`
 
 // receive `username` and `evidence` from the client
 // if the client uses this package, you can use `extractLoginEvidence(request)`
 const result = authenticate(username, salt, verifier, pair, client, evidence, config);
 // add other data to the result object
-// send result to client like `myPostDataFn(url, JSON.stringify(result));`
+// response result to client like `new Response(JSON.stringify(result));`
 ```
 
-## Encryption Configuration
+### Encryption Configuration
+
+#### SRP Group Parameters
+
+`GROUP_XXXX` indicates "SRP Group Parameters" of RFC 5054 Appendix A.
 
 ```ts
 import { SRPConfig, SHA_512, GROUP_4096 } from "@scirexs/srp6a/client";
@@ -93,18 +97,28 @@ const config = new SRPConfig(GROUP_4096, SHA_512);
 
 The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they include a precomputed `multiplier` value. `GROUP_4096` does not include the precomputed `multiplier` to reduce package size, as it can be derived through calculation when needed.
 
+#### Salt Length
 
-# SRP Overview
+The salt bytes should be greater than the hash output bytes, so we defined salt length as twice the output bytes. For example, it will be 64 bytes if use SHA-256 hash algorithm.
 
-## Procedure
+## Warning
 
-### Signup
+This package includes security countermeasures such as constant-time comparisons and random delay insertion. However, it has never received an independent third-party security audit for correctness and security.
+
+**Do not use this package in production environments without understanding the security risks involved. USE AT YOUR OWN RISK!**
+
+
+## SRP Overview
+
+### Procedure
+
+#### Signup
 
 1. Client: Calculate salt, verifier from username and password (`createUserCredentials`)
 2. Client: Send Username, salt, verifier
 3. Server: Store them
 
-### Login
+#### Login
 
 1. Client: Generate random key pair (`createLoginHello`)
 2. Client: Send Username, public key of the pair
@@ -122,8 +136,8 @@ The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they 
 14. Server: Send server evidence and result of authentication
 15. Client: Confirm exactly matched the server evidences and expected (`verifyServer`)
 
-## Vocabulary
-### Operator, Function
+### Vocabulary
+#### Operator, Function
 
 |Expression|Description|
 |---|---|
@@ -134,7 +148,7 @@ The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they 
 |MP(n,k,m)|Calculates modPow as `n^k % m`|
 |PAD(d)|Cast d to zero-padding|
 
-### Variable
+#### Variable
 
 |Variable|Description|
 |---|---|
@@ -154,7 +168,7 @@ The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they 
 |K|Strong session key|
 |Mc,Ms|Evidence|
 
-#### Name in Code
+##### Name in Code
 
 |Variable|Name|
 |---|---|
@@ -176,7 +190,7 @@ The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they 
 |K|key|
 |Mc,Ms|evidence|
 
-## Formula for each variable
+### Formula for each variable
 
 |Variable|Expression|Note|
 |---|---|---|
@@ -203,9 +217,9 @@ The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they 
 |Ms|H(A, Mc, Ks)|-|
 |Ms'|H(A, Mc, Ks)|Expected Ms|
 
-# SRP Details
+## SRP Details
 
-## Signup phase (Client)
+### Signup phase (Client)
 
 1. Client: Send `U`,`s`,`v`.
 
@@ -218,7 +232,7 @@ The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they 
 |x|H(s \| I)|
 |v|MP(g, x, N)|
 
-## Login phase
+### Login phase
 
 1. Client: Send `U`,`A`.
 
@@ -273,10 +287,3 @@ The difference between `GROUP_4096` and `GROUP_4096_FOR_SERVER` is whether they 
 |---|---|
 |Ms'|\<read from state>|
 |Ms|\<read from server>|
-
-
-# Warning
-
-This package includes security countermeasures such as constant-time comparisons and random delay insertion. However, it has never received an independent third-party security audit for correctness and security.
-
-**Do not use this package in production environments without understanding the security risks involved. USE AT YOUR OWN RISK!**
