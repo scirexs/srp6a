@@ -2,6 +2,8 @@ import { assert, assertEquals, assertInstanceOf, assertNotEquals, assertThrows }
 import { describe, it } from "jsr:@std/testing/bdd";
 
 import {
+  GROUP_1024_DEPRECATED,
+  GROUP_1536_DEPRECATED,
   GROUP_2048,
   GROUP_2048_FOR_SERVER,
   GROUP_3072,
@@ -36,6 +38,20 @@ import {
 import { SRPHashConfig, SRPSecurityGroup } from "../src/shared/types.ts";
 
 describe("Constants", () => {
+  it("should have correct GROUP_1024_DEPRECATED properties", () => {
+    assertEquals(GROUP_1024_DEPRECATED.length, 1024);
+    assertEquals(GROUP_1024_DEPRECATED.generator, BigInt(2));
+    assertEquals(typeof GROUP_1024_DEPRECATED.prime, "bigint");
+    assertEquals(GROUP_1024_DEPRECATED.multiplier, "");
+  });
+
+  it("should have correct GROUP_1536_DEPRECATED properties", () => {
+    assertEquals(GROUP_1536_DEPRECATED.length, 1536);
+    assertEquals(GROUP_1536_DEPRECATED.generator, BigInt(2));
+    assertEquals(typeof GROUP_1536_DEPRECATED.prime, "bigint");
+    assertEquals(GROUP_1536_DEPRECATED.multiplier, "");
+  });
+
   it("should have correct GROUP_2048 properties", () => {
     assertEquals(GROUP_2048.length, 2048);
     assertEquals(GROUP_2048.generator, BigInt(2));
