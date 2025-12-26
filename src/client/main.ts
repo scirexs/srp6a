@@ -14,7 +14,16 @@ import {
   generateSalt,
   isValidPublic,
 } from "../shared/functions.ts";
-import type { AuthResult, ClientHello, CryptoKeyPair, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
+import type {
+  AuthResult,
+  ClientHello,
+  CryptoKeyPair,
+  CryptoSource,
+  KeyPair,
+  LoginEvidence,
+  ServerHello,
+  SignupCredentials,
+} from "../shared/types.ts";
 
 /**
  * Creates user credentials for SRP6a signup process.
@@ -69,8 +78,8 @@ function createLoginHello(username: string, config: SRPConfig): [ClientHello, Ke
  *
  * @param username - The username attempting to login
  * @param password - The password for authentication
- * @param salt - Salt value from server (string or CryptoNumber)
- * @param server - Server's public key (string or CryptoNumber)
+ * @param salt - Salt value from server
+ * @param server - Server's public key
  * @param pair - Client's key pair from login hello
  * @param config - SRP configuration object
  * @returns Promise that resolves to tuple containing [LoginEvidence, expected server evidence]
@@ -91,15 +100,15 @@ function createLoginHello(username: string, config: SRPConfig): [ClientHello, Ke
 async function createEvidence(
   username: string,
   password: string,
-  salt: string | CryptoNumber,
-  server: string | CryptoNumber,
+  salt: CryptoSource,
+  server: CryptoSource,
   pair: KeyPair | CryptoKeyPair,
   config: SRPConfig,
 ): Promise<[LoginEvidence, string]> {
-  salt = typeof salt === "string" ? new CryptoNumber(salt) : salt;
-  server = typeof server === "string" ? new CryptoNumber(server) : server;
-  const pubClient = typeof pair.public === "string" ? new CryptoNumber(pair.public) : pair.public;
-  const pvtClient = typeof pair.private === "string" ? new CryptoNumber(pair.private) : pair.private;
+  salt = new CryptoNumber(salt);
+  server = new CryptoNumber(server);
+  const pubClient = new CryptoNumber(pair.public);
+  const pvtClient = new CryptoNumber(pair.private);
 
   if (!isValidPublic(server, config)) throw new Error("Random public key from server is invalid.");
   const identity = await computeIdentity(username, password, config);

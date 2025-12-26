@@ -1,6 +1,6 @@
 {
   "name": "@scirexs/srp6a",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "license": "MIT",
   "exports": {
     "./client": "./src/client/mod.ts",
@@ -15,6 +15,10 @@
     ]
   },
   "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  },
   "tasks": {
     "dev": "deno test --watch"
   },

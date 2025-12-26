@@ -21,14 +21,23 @@ import {
   generateServerKeyPair,
   isValidPublic,
 } from "../shared/functions.ts";
-import type { AuthResult, ClientHello, CryptoKeyPair, KeyPair, LoginEvidence, ServerHello, SignupCredentials } from "../shared/types.ts";
+import type {
+  AuthResult,
+  ClientHello,
+  CryptoKeyPair,
+  CryptoSource,
+  KeyPair,
+  LoginEvidence,
+  ServerHello,
+  SignupCredentials,
+} from "../shared/types.ts";
 
 /**
  * Creates server hello response for SRP6a authentication.
  * Generates server key pair and returns hello message along with the key pair for session use.
  *
- * @param salt - Salt value from user registration (string or CryptoNumber)
- * @param verifier - Password verifier from user registration (string or CryptoNumber)
+ * @param salt - Salt value from user registration
+ * @param verifier - Password verifier from user registration
  * @param config - SRP configuration object
  * @returns Promise that resolves to tuple containing [ServerHello message, KeyPair for the session]
  *
@@ -39,18 +48,14 @@ import type { AuthResult, ClientHello, CryptoKeyPair, KeyPair, LoginEvidence, Se
  * // Send hello to client, store keyPair for authentication
  * ```
  */
-async function createServerHello(
-  salt: string | CryptoNumber,
-  verifier: string | CryptoNumber,
-  config: SRPConfig,
-): Promise<[ServerHello, KeyPair]> {
-  salt = typeof salt === "string" ? salt : salt.hex;
-  verifier = typeof verifier === "string" ? new CryptoNumber(verifier) : verifier;
+async function createServerHello(salt: CryptoSource, verifier: CryptoSource, config: SRPConfig): Promise<[ServerHello, KeyPair]> {
+  salt = new CryptoNumber(salt);
+  verifier = new CryptoNumber(verifier);
 
   const multiplier = await computeMultiplier(config);
   const pair = generateServerKeyPair(multiplier, verifier, config);
   return [
-    { salt, server: pair.public.hex },
+    { salt: salt.hex, server: pair.public.hex },
     { private: pair.private.hex, public: pair.public.hex },
   ];
 }
@@ -82,11 +87,11 @@ function createDummyHello(config: SRPConfig): ServerHello {
  * Verifies client's knowledge of password and computes server evidence if authentication succeeds.
  *
  * @param username - The username attempting to authenticate
- * @param salt - Salt value from user registration (string or CryptoNumber)
- * @param verifier - Password verifier from user registration (string or CryptoNumber)
+ * @param salt - Salt value from user registration
+ * @param verifier - Password verifier from user registration
  * @param pair - Server's key pair from hello phase
- * @param client - Client's public key from hello phase (string or CryptoNumber)
- * @param evidence - Client evidence to verify (string or CryptoNumber)
+ * @param client - Client's public key from hello phase
+ * @param evidence - Client evidence to verify
  * @param config - SRP configuration object
  * @returns Promise that resolves to AuthResult with result status and server evidence
  * @throws Error if client's public key is invalid
@@ -114,19 +119,19 @@ function createDummyHello(config: SRPConfig): ServerHello {
  */
 async function authenticate(
   username: string,
-  salt: string | CryptoNumber,
-  verifier: string | CryptoNumber,
+  salt: CryptoSource,
+  verifier: CryptoSource,
   pair: KeyPair | CryptoKeyPair,
-  client: string | CryptoNumber,
-  evidence: string | CryptoNumber,
+  client: CryptoSource,
+  evidence: CryptoSource,
   config: SRPConfig,
 ): Promise<AuthResult> {
-  salt = typeof salt === "string" ? new CryptoNumber(salt) : salt;
-  verifier = typeof verifier === "string" ? new CryptoNumber(verifier) : verifier;
-  client = typeof client === "string" ? new CryptoNumber(client) : client;
-  evidence = typeof evidence === "string" ? new CryptoNumber(evidence) : evidence;
-  const pubServer = typeof pair.public === "string" ? new CryptoNumber(pair.public) : pair.public;
-  const pvtServer = typeof pair.private === "string" ? new CryptoNumber(pair.private) : pair.private;
+  salt = new CryptoNumber(salt);
+  verifier = new CryptoNumber(verifier);
+  client = new CryptoNumber(client);
+  evidence = new CryptoNumber(evidence);
+  const pubServer = new CryptoNumber(pair.public);
+  const pvtServer = new CryptoNumber(pair.private);
 
   if (!isValidPublic(client, config)) throw new Error("Random public key from client is invalid.");
   const scrambling = await computeScramblingParameter(client, pubServer, config);

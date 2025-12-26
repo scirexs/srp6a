@@ -2,6 +2,7 @@ export type {
   AuthResult,
   ClientHello,
   CryptoKeyPair,
+  CryptoSource,
   HashAlgorithm,
   KeyPair,
   LoginEvidence,
@@ -14,9 +15,12 @@ export type {
 import type { CryptoNumber } from "./crypto.ts";
 
 /**
+ * Supported types for SRP computations.
+ */
+type CryptoSource = bigint | string | Uint8Array | CryptoNumber;
+/**
  * Security group parameters for SRP6a authentication.
  * Contains cryptographic parameters including prime number, generator, and multiplier.
- * ```
  */
 type SRPSecurityGroup = {
   /** Bit length of the security group (e.g., 1024, 2048, 3072, 4096) */

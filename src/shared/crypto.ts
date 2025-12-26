@@ -1,7 +1,7 @@
 export { computeHash, CryptoNumber, generateSecureRandom, getDefaultConfig, SRPConfig };
 
 import { GROUP_2048, SHA_256 } from "../shared/constants.ts";
-import type { HashAlgorithm, SRPHashConfig, SRPSecurityGroup } from "./types.ts";
+import type { CryptoSource, HashAlgorithm, SRPHashConfig, SRPSecurityGroup } from "./types.ts";
 
 // Works with Web Crypto API like brower, Node.js, Deno.
 const crypto = globalThis?.crypto;
@@ -105,6 +105,7 @@ function generateSecureRandom(bytes: number): CryptoNumber {
 class CryptoNumber {
   /** Padding length for hex strings (no need to use) */
   static PAD_LEN = 0;
+  static #HEX_REGEX = /^[0-9a-fA-F]+$/;
   #int: bigint | undefined;
   #hex: string = "";
   #buf: Uint8Array | undefined;
@@ -135,21 +136,19 @@ class CryptoNumber {
   }
   /**
    * Creates an instance of CryptoNumber
-   * @param {bigint | string | Uint8Array} value - Initial value (bigint, hex string, or Uint8Array)
+   * @param {bigint | string | Uint8Array | CryptoNumber} value - Initial value (bigint, hex string, or Uint8Array)
    * @throws {Error} If PAD_LEN is not initialized
    */
-  constructor(value: bigint | string | Uint8Array) {
+  constructor(value: CryptoSource) {
     if (CryptoNumber.PAD_LEN <= 0) throw new Error("PAD_BYTES must be initialized before use.");
-    switch (typeof value) {
-      case "bigint":
-        this.#int = value;
-        break;
-      case "string":
-        this.#hex = CryptoNumber.#guardHex(value);
-        break;
-      case "object":
-        this.#buf = value;
-        break;
+    if (typeof value === "bigint") {
+      this.#int = value;
+    } else if (typeof value === "string") {
+      this.#hex = CryptoNumber.#guardHex(value);
+    } else if (value instanceof Uint8Array) {
+      this.#buf = value;
+    } else {
+      this.#hex = value.hex;
     }
   }
 
@@ -172,62 +171,23 @@ class CryptoNumber {
   }
   /** Derives bigint from internal state */
   #deriveInt(): bigint {
-    return this.#hex ? this.#castHex2Int() : this.#castBuf2Int();
+    return BigInt(`0x${this.hex}`);
   }
   /** Derives hex string from internal state */
   #deriveHex(): string {
-    const str = this.#buf ? this.#castBuf2Hex() : this.#castInt2Hex();
-    return CryptoNumber.#guardHex(str);
+    if (this.#buf) return this.#buf.toHex();
+    if (this.#int === undefined) throw new Error("Could not cast from internal value.");
+    return CryptoNumber.#padHexString(this.#int.toString(16));
   }
   /** Derives Uint8Array from internal state */
   #deriveBuf(): Uint8Array {
-    return this.#hex ? this.#castHex2Buf() : this.#castInt2Buf();
-  }
-  /** Converts bigint to hex string */
-  #castInt2Hex(): string {
-    if (this.#int === undefined) CryptoNumber.#castError();
-    return CryptoNumber.#padHexString(this.#int.toString(16));
-  }
-  /** Converts bigint to Uint8Array */
-  #castInt2Buf(): Uint8Array {
-    if (this.#int === undefined) CryptoNumber.#castError();
-    return new Uint8Array(this.hex.match(/.{2}/g)!.map((x) => parseInt(x, 16)));
-  }
-  /** Converts hex string to bigint */
-  #castHex2Int(): bigint {
-    if (!this.#hex) CryptoNumber.#castError();
-    return BigInt(`0x${this.#hex}`);
-  }
-  /** Converts hex string to Uint8Array */
-  #castHex2Buf(): Uint8Array {
-    if (!this.#hex) CryptoNumber.#castError();
-    return new Uint8Array(this.#hex.match(/.{2}/g)!.map((x) => parseInt(x, 16)));
-  }
-  /** Converts Uint8Array to bigint */
-  #castBuf2Int(): bigint {
-    if (!this.#buf) CryptoNumber.#castError();
-    return BigInt(`0x${this.hex}`);
-  }
-  /** Converts Uint8Array to hex string */
-  #castBuf2Hex(): string {
-    if (!this.#buf) CryptoNumber.#castError();
-    return Array.from(this.#buf)
-      .map((x) => x.toString(16).padStart(2, "0"))
-      .join("");
+    return Uint8Array.fromHex(this.hex);
   }
 
-  /** Throws a conversion error */
-  static #castError(): never {
-    throw new Error("Can't cast from empty.");
-  }
   /** Validates and pads hex string */
   static #guardHex(str: string): string {
-    if (!CryptoNumber.#isValidHexString(str)) throw new Error("Contains invalid characters as hexadecimal.");
-    return CryptoNumber.#padHexString(str);
-  }
-  /** Checks if string is a valid hex string */
-  static #isValidHexString(str: string): boolean {
-    return /^[0-9a-fA-F]+$/.test(str);
+    if (CryptoNumber.#HEX_REGEX.test(str)) return CryptoNumber.#padHexString(str);
+    throw new Error("Contains invalid characters as hexadecimal.");
   }
   /** Pads hex string to even length */
   static #padHexString(str: string): string {
