@@ -28,7 +28,7 @@ For details, see [the client documentation](https://jsr.io/@scirexs/srp6a/doc/cl
 import { getDefaultConfig, createUserCredentials } from "@scirexs/srp6a/client";
 
 const config = getDefaultConfig();
-const credentials = createUserCredentials(username, password, config);
+const credentials = await createUserCredentials(username, password, config);
 
 // send data to server like `fetch(url, { method: "POST", body: JSON.stringify(credentials)});`
 ```
@@ -68,13 +68,13 @@ import { getDefaultConfig, createServerHello, authenticate } from "@scirexs/srp6
 // read user's `salt` and `verifier` from the database
 // if the user does not exist, use `createDummyHello` instead of `createServerHello`
 const config = getDefaultConfig();
-const [hello, pair] = createServerHello(salt, verifier, config);
+const [hello, pair] = await createServerHello(salt, verifier, config);
 // it is recommended to always use `addRandomDelay` before sending hello to mitigate timing attacks
 // response hello to client like `new Response(JSON.stringify(hello));`
 
 // receive `username` and `evidence` from the client
 // if the client uses this package, you can use `extractLoginEvidence(request)`
-const result = authenticate(username, salt, verifier, pair, client, evidence, config);
+const result = await authenticate(username, salt, verifier, pair, client, evidence, config);
 // add other data to the result object
 // response result to client like `new Response(JSON.stringify(result));`
 ```

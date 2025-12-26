@@ -65,7 +65,7 @@ async function createServerHello(
  * ```ts
  * const userRecord = getUserFromDatabase(username);
  * if (!userRecord) {
- *   const dummy = await createDummyHello(config);
+ *   const dummy = createDummyHello(config);
  *   addRandomDelay();
  *   // Send dummy response to client
  * }
