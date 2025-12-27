@@ -19,10 +19,16 @@ import type { CryptoNumber } from "./crypto.ts";
  */
 type CryptoSource = bigint | string | Uint8Array | CryptoNumber;
 /**
+ * Supported hash algorithms for SRP6a authentication.
+ * Defines the cryptographic hash functions that can be used for SRP computations.
+ * SHA-1 is used by unit testing.
+ */
+type HashAlgorithm = "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
+/**
  * Security group parameters for SRP6a authentication.
  * Contains cryptographic parameters including prime number, generator, and multiplier.
  */
-type SRPSecurityGroup = {
+interface SRPSecurityGroup {
   /** Bit length of the security group (e.g., 1024, 2048, 3072, 4096) */
   length: number;
   /** Large prime number used as the modulus for calculations */
@@ -31,45 +37,39 @@ type SRPSecurityGroup = {
   generator: bigint;
   /** Multiplier value used in SRP calculations as hex string */
   multiplier: string;
-};
-/**
- * Supported hash algorithms for SRP6a authentication.
- * Defines the cryptographic hash functions that can be used for SRP computations.
- * SHA-1 is used by unit testing.
- */
-type HashAlgorithm = "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
+}
 /**
  * Hash configuration for SRP6a authentication.
  * Specifies the hash algorithm and associated byte lengths for cryptographic operations.
  */
-type SRPHashConfig = {
+interface SRPHashConfig {
   /** Hash algorithm to use for SRP computations */
   algorithm: HashAlgorithm;
   /** Output length of the hash algorithm in bytes */
   bytes: number;
   /** Length of salt to generate in bytes */
   salt: number;
-};
+}
 /**
  * Public-private key pair for SRP6a authentication.
  * Contains both the random private key and random public key used in the SRP protocol.
  */
-type CryptoKeyPair = {
+interface CryptoKeyPair {
   /** Random private key used for authentication */
   private: CryptoNumber;
   /** Random public key shared during authentication handshake */
   public: CryptoNumber;
-};
+}
 /**
  * Public-private hex key pair for SRP6a authentication.
  * Contains both the random private key and random public key used in the SRP protocol.
  */
-type KeyPair = {
+interface KeyPair {
   /** Random private hex key used for authentication */
   private: string;
   /** Random public hex key shared during authentication handshake */
   public: string;
-};
+}
 /**
  * User credentials for SRP6a signup process.
  * Contains username, salt, and verifier needed to register a new user.
