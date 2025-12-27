@@ -36,6 +36,7 @@ const credentials = await createUserCredentials(username, password, config);
 #### Authentication Phase
 
 ```ts
+// the args type `CryptoSource` is defined as `bigint | string | Uint8Array | CryptoNumber;`.
 import { getDefaultConfig, createLoginHello, createEvidence, verifyServer } from "@scirexs/srp6a/client";
 
 const config = getDefaultConfig();
@@ -60,6 +61,7 @@ For details, see [the server documentation](https://jsr.io/@scirexs/srp6a/doc/se
 #### Authentication Phase
 
 ```ts
+// the args type `CryptoSource` is defined as `bigint | string | Uint8Array | CryptoNumber;`.
 import { getDefaultConfig, createServerHello, authenticate } from "@scirexs/srp6a/server";
 
 // receive `username` and public key from the client
